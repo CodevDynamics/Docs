@@ -26,5 +26,5 @@ jobs:
 
       - name: Upload HTML
         run: |
-          ossutil config -e ${{ secrets.ALI_ENDPOINT_OUTER }} -i ${{ secrets.ALI_ACCESS_KEY_ID }} -k ${{ secrets.ALI_ACCESS_KEY_SECRET }} -L CH &&\
-          ossutil cp -rf build/html/ oss://${{ secrets.ALI_DOC_BUCKET_NAME }}/
+          aliyun configure set --profile default --region ${{ secrets.ALI_REGION_ID_OUTER }} --access-key-id ${{ secrets.ALI_ACCESS_KEY_ID }} --access-key-secret ${{ secrets.ALI_ACCESS_KEY_SECRET }}
+          aliyun oss cp -rf build/html/ oss://${{ secrets.ALI_DOC_BUCKET_NAME }}/
