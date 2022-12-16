@@ -1,0 +1,30 @@
+name: Build HTML
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: install sphinx
+        run: |
+          pip3 install sphinx sphinx-autobuild
+
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+          submodules: 'true'
+
+      - name: Build HTML
+        run: |
+          make html
+
+      - name: Upload HTML
+        run: |
+          ossutil config -e ${{ secrets.ALI_ENDPOINT_OUTER }} -i ${{ secrets.ALI_ACCESS_KEY_ID }} -k ${{ secrets.ALI_ACCESS_KEY_SECRET }} -L CH &&\
+          ossutil cp -rf build/html/ oss://${{ secrets.ALI_DOC_BUCKET_NAME }}/
