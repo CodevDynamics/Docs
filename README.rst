@@ -7,7 +7,7 @@ Requirement
 
 Install
 -------------
-    ``pip3 install sphinx sphinx-autobuild sphinx_rtd_theme``
+    ``pip3 install sphinx sphinx-autobuild sphinx_rtd_theme sphinxcontrib-plantuml``
 
 Directory Structure
 ---------------------

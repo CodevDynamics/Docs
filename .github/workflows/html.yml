@@ -13,7 +13,8 @@ jobs:
     steps:
       - name: install sphinx
         run: |
-          pip3 install sphinx sphinx-autobuild sphinx_rtd_theme
+          sudo apt-get install plantuml
+          pip3 install sphinx sphinx-autobuild sphinx_rtd_theme sphinxcontrib-plantuml
 
       - uses: actions/checkout@v3
         with:

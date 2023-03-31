@@ -1,0 +1,36 @@
+@startuml Tracking
+skinparam actorStyle awesome
+"User" as user
+
+(codevqtros/tracking/Object Topic) as Object
+(codevqtros/tracking/SetObject Topic) as SetObject
+
+usecase Parameters as "Parameters
+codevqtros/tracking/enable bool
+"
+
+user --> Object : Publish
+user <-- SetObject : Subscrib
+user <-- Parameters : Only Get, ON/OFF Tracking
+
+
+note top of (Object)
+codevqtros_msgs/TrackingObject {
+    float32 x  # 0.0~1.0
+    float32 y
+    float32 width
+    float32 height
+    int32 status # 0: invalid, 1: valid
+}
+end note
+
+note top of (SetObject)
+codevqtros_msgs/SetObject {
+    float32 x  # 0.0~1.0
+    float32 y
+    float32 width
+    float32 height
+}
+end note
+
+@enduml

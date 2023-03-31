@@ -1,0 +1,37 @@
+@startuml Detect
+skinparam actorStyle awesome
+"User" as user
+
+(codevqtros/detect/Objects Topic) as Object
+(codevqtros/detect/SetObject Topic) as SetObject
+
+usecase Parameters as "Parameters
+codevqtros/detect/enable bool
+"
+
+user --> Object : Publish
+user <-- SetObject : Subscrib
+user <-- Parameters : Only Get, ON/OFF Detect
+
+
+note top of (Object)
+codevqtros_msgs/DetectObject {
+    float32 x  # 0.0~1.0
+    float32 y
+    float32 width
+    float32 height
+    string objectId # name
+    string rgba # format: "#[Alpha][Red][Green][Blue]"
+}
+end note
+
+note top of (SetObject)
+codevqtros_msgs/SetObject {
+    float32 x # 0.0~1.0
+    float32 y
+    float32 width
+    float32 height
+}
+end note
+
+@enduml

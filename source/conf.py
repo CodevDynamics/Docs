@@ -9,14 +9,16 @@ import sphinx_rtd_theme
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 project = 'Codev Dynamics Documents'
-copyright = '2022, Codev'
+copyright = '2023, Codev Dynamics'
 author = 'Codev'
-release = '1.0.0'
+release = '1.0.1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+extensions = [
+    'sphinxcontrib.plantuml'
+]
 
 templates_path = ['_templates']
 exclude_patterns = []
