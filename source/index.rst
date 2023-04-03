@@ -13,3 +13,10 @@ AQUILA I
 
    aquila_i/HYAI-310UAV.rst
 
+
+其他
+-----------------------
+.. toctree::
+   :maxdepth: 1
+
+   apt/apt_service.rst
