@@ -13,6 +13,10 @@ AQUILA I
 
    aquila_i/HYAI-310UAV.rst
 
+.. toctree::
+   :maxdepth: 2
+
+   interface/websocket.rst
 
 其他
 -----------------------
