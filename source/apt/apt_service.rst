@@ -6,7 +6,7 @@ Codev Apt私有源
 -----------------
     ::
 
-        sudo sh -c 'echo "deb http://192.168.1.101:10240/ubuntu ./$(lsb_release -sc) nx" > /etc/apt/sources.list.d/codev-apt.list'
+        sudo sh -c 'echo "deb http://192.168.1.101:10240/ubuntu ./$(lsb_release -sc) main" > /etc/apt/sources.list.d/codev-apt.list'
         curl -s http://192.168.1.101:10240/codev.asc | sudo apt-key add -
 
 
@@ -14,5 +14,5 @@ Codev Apt私有源
 --------------------------
     ::
         
-        sudo sh -c 'echo "deb http://nest.codevdynamics.com:10240/ubuntu ./$(lsb_release -sc) nx" > /etc/apt/sources.list.d/codev-apt.list'
+        sudo sh -c 'echo "deb http://nest.codevdynamics.com:10240/ubuntu ./$(lsb_release -sc) main" > /etc/apt/sources.list.d/codev-apt.list'
         curl -s http://nest.codevdynamics.com:10240/codev.asc | sudo apt-key add -

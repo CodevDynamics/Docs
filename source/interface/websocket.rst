@@ -12,6 +12,7 @@ WebSocket 客户端
     消息类型      发送方        接收方      是否应答     描述
     ===========  ============ ============= ======== ===============================
     1             飞行器         服务器        否       :ref:`telemetry-label`
+    2             飞行器         服务器        否       :ref:`mission-progress-label`
     1000          服务器         飞行器        是       :ref:`arm-label`
     1001          服务器         飞行器        是       :ref:`takeoff-label`
     1002          服务器         飞行器        是       :ref:`land-label`
@@ -26,6 +27,7 @@ WebSocket 客户端
     1011          服务器         飞行器        是       :ref:`cancel-mission-label`
     1012          服务器         飞行器        是       :ref:`continue-mission-label`
     1013          服务器         飞行器        是       :ref:`push-rtmp-video-stream-label`
+    1496          服务器         飞行器        是       :ref:`get-mission-file-content-label`
     1497          服务器         飞行器        是       :ref:`delete-mission-file-label`
     1498          服务器         飞行器        是       :ref:`upload-mission-file-label`
     1499          服务器         飞行器        是       :ref:`request-mission-list-label`
@@ -136,6 +138,33 @@ WebSocket 客户端
             "aircraft_speed": 0.05999999866,
             "battery_percent": 100,
             "msg_type": 1
+        }
+
+.. _mission-progress-label:
+
+飞行器任务执行进度
+-----------------------
+
+飞行器发送
+^^^^^^^^^^^^^^^
+    ================= =========  ======== ===============================
+    参数                类型       缺省      描述
+    ================= =========  ======== ===============================
+    msg_type           Int         否       :ref:`msg-type-label`
+    step               Int         否      0: 检查任务；1: 上传任务；2: 执行任务
+    total              Int         否      当前步骤总进度
+    sequence           Int         否      当前步骤进度
+    ================= =========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "step": 0,
+            "total": 100,
+            "sequence": 10,
+            "msg_type": 2
         }
 
 .. _arm-label:
@@ -724,6 +753,77 @@ WebSocket 客户端
         {
             "msg_type": 1013,
             "url": "rtmp://127.0.0.1:1234"
+        }
+
+.. _get-mission-file-content-label:
+
+获得指定任务文件的内容
+----------------------------------------------
+
+飞行器应答
+^^^^^^^^^^^^^^^
+
+    ============= ========== ===============================
+    参数           类型       描述
+    ============= ========== ===============================
+    msg_type       Int       :ref:`msg-type-label`
+    result         Int       :ref:`result-label`
+    filename       String    任务文件名
+    missionItems   Object[]  :ref:`mission-object-label`
+    ============= ========== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "filename": "test.mission"
+            "missionItems": [
+                {
+                    "latitude": 32.111,
+                    "longitude": 120.111,
+                    "altitude": 82.6,
+                    "vehicle_action": 1
+                },
+                {
+                    "latitude": 32.111,
+                    "longitude": 120.112,
+                    "altitude": 82.6,
+                    "vehicle_action": 0,
+                    "speed": 5.0,
+                    "is_fly_through": true
+                },
+                {
+                    "latitude": 32.111,
+                    "longitude": 120.113,
+                    "altitude": 82.6,
+                    "camera_action": 0,
+                    "gimbal_pitch": 10.0,
+                    "gimbal_yaw": 45.0,
+                    "is_fly_through": false
+                }
+            ],
+            "msg_type": 1496
+        }
+
+服务端发送
+^^^^^^^^^^^^^^^
+
+    =============  ======== ===============================
+    参数            类型       描述
+    =============  ======== ===============================
+    msg_type       Int       :ref:`msg-type-label`
+    name           String    任务文件的名字
+    =============  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "name": "test.mission",
+            "msg_type": 1496
         }
 
 .. _delete-mission-file-label:
