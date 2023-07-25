@@ -772,6 +772,8 @@ WebSocket 客户端
     missionItems   Object[]  :ref:`mission-object-label`
     ============= ========== ===============================
 
+    **只支持格式为mission任务文件内容查看**
+
 例子
 """"""""""""
     ::
@@ -1028,7 +1030,6 @@ WebSocket 客户端
     ===========  ======== ===============================
     msg_type      Int       :ref:`msg-type-label`
     pitch         Double    云台 Pitch，单位度
-    roll          Double    云台 Roll，单位度
     yaw           Double    云台 Yaw，单位度
     ===========  ======== ===============================
 
@@ -1038,7 +1039,6 @@ WebSocket 客户端
 
         {
             "pitch": 0.0,
-            "roll": 0.0,
             "yaw": 45.0,
             "msg_type": 1501
         }
