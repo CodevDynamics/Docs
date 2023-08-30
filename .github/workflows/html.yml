@@ -14,12 +14,14 @@ jobs:
       - name: install sphinx
         run: |
           sudo apt-get install plantuml
-          pip3 install sphinx sphinx-autobuild sphinx_rtd_theme sphinxcontrib-plantuml
+          pip3 install sphinx sphinx-autobuild sphinx_rtd_theme sphinxcontrib-plantuml PyYAML
+          pip3 install -U git+https://github.com/CodevDynamics/sphinxcontrib-ros.git@master#egg=sphinxcontrib-ros
 
       - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
           submodules: 'true'
+          token: ${{ secrets.CODEVCI }}
 
       - name: Build HTML
         run: |

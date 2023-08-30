@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to Codev Dynamics's documentation!
-=====================================
+============================================
 
 AQUILA I
 -----------------------
@@ -17,6 +17,7 @@ AQUILA I
    :maxdepth: 2
 
    interface/websocket.rst
+   interface/rosapi.rst
 
 其他
 -----------------------

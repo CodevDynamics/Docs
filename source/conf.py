@@ -17,13 +17,13 @@ release = '1.0.1'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    'sphinxcontrib.plantuml'
+    'sphinxcontrib.plantuml',
+    'sphinxcontrib.ros'
 ]
 
 templates_path = ['_templates']
 exclude_patterns = []
-
-
+ros_base_path = [ './interface/CodevRos']
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
