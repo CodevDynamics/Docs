@@ -6,13 +6,13 @@ Codev Apt私有源
 -----------------
     ::
 
-        sudo sh -c 'echo "deb http://192.168.1.101:10240/ubuntu ./$(lsb_release -sc) main" > /etc/apt/sources.list.d/codev-apt.list'
-        curl -s http://192.168.1.101:10240/codev.asc | sudo apt-key add -
+        sudo curl -sSL http://192.168.1.101:10240/codev.key -o /usr/share/keyrings/codev-archive-keyring.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/codev-archive-keyring.gpg] http://192.168.1.101:10240/ubuntu ./$(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/codev-apt.list > /dev/null
 
 
 外网电脑添加源
 --------------------------
     ::
         
-        sudo sh -c 'echo "deb http://nest.codevdynamics.com:10240/ubuntu ./$(lsb_release -sc) main" > /etc/apt/sources.list.d/codev-apt.list'
-        curl -s http://nest.codevdynamics.com:10240/codev.asc | sudo apt-key add -
+        sudo curl -sSL http://nest.codevdynamics.com:10240/codev.key -o /usr/share/keyrings/codev-archive-keyring.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/codev-archive-keyring.gpg] http://nest.codevdynamics.com:10240/ubuntu ./$(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/codev-apt.list > /dev/null
