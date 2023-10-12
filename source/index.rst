@@ -17,6 +17,7 @@ AQUILA I
    :maxdepth: 2
 
    interface/websocket.rst
+   interface/mqtt.rst
    interface/rosapi.rst
 
 其他

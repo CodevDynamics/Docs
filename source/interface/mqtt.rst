@@ -1,64 +1,88 @@
-WebSocket 客户端
+MQTT 客户端
 =====================================
-    运行在机载设备上的 WebSocket 客户端程序：可用于推送飞机的遥测数据以及异步接受来自服务器的控制命令。
+    运行在机载设备上的 MQTT 客户端程序：可用于推送飞机和机库的遥测数据以及异步接受来自服务器的控制命令。
 
-.. _msg-type-label:
+.. _msg-topic-list:
 
-消息类型
+MQTT Topic 格式列表
 -----------------------
-    作为客户端连接到 WebScoket 服务器，只发送和接受 Json 格式的数据。关键字：**msg_type**，用于代表消息类型，目前所以消息类型如下（持续更新）：
+    目前设备只有包含 5 种 Topic 类型，如下：
 
-    ===========  ============ ============= ======== ===============================
-    消息类型      发送方         接收方     是否应答     描述
-    ===========  ============ ============= ======== ===============================
-    1             终端          服务器         否       :ref:`telemetry-label`
-    2             终端          服务器         否       :ref:`mission-progress-label`
-    3             终端          服务器         否       :ref:`airport-status-label`
-    4             终端          服务器         否       :ref:`schedule-status-label`
-    1000          服务器         终端          是       :ref:`arm-label`
-    1001          服务器         终端          是       :ref:`takeoff-label`
-    1002          服务器         终端          是       :ref:`land-label`
-    1003          服务器         终端          是       :ref:`rtl-label`
-    1004          服务器         终端          是       :ref:`hold-label`
-    1005          服务器         终端          是       :ref:`posctl-label`
-    1006          服务器         终端          是       :ref:`goto-location-label`
-    1007          服务器         终端          是       :ref:`takephoto-label`
-    1008          服务器         终端          是       :ref:`start-video-label`
-    1009          服务器         终端          是       :ref:`stop-video-label`
-    1010          服务器         终端          是       :ref:`start-mission-label`
-    1011          服务器         终端          是       :ref:`cancel-mission-label`
-    1012          服务器         终端          是       :ref:`continue-mission-label`
-    1013          服务器         终端          是       :ref:`push-rtmp-video-stream-label`
-    1014          服务器         终端          是       :ref:`set-zoom-label`
-    1196          服务器         终端          是       :ref:`get-camera-param-label`
-    1197          服务器         终端          是       :ref:`set-camera-param-label`
-    1198          服务器         终端          是       :ref:`list-camera-param-label`
-    1199          服务器         终端          是       :ref:`describe-camera-param-label`
-    1200          服务器         终端          是       :ref:`airport-door-label`
-    1201          服务器         终端          是       :ref:`stop-airport-door-label`
-    1202          服务器         终端          是       :ref:`airport-lift-label`
-    1203          服务器         终端          是       :ref:`stop-airport-lift-label`
-    1204          服务器         终端          是       :ref:`airport-vertical-label`
-    1205          服务器         终端          是       :ref:`stop-airport-vertical-label`
-    1206          服务器         终端          是       :ref:`airport-horizontal-label`
-    1207          服务器         终端          是       :ref:`stop-airport-horizontal-label`
-    1296          服务器         终端          是       :ref:`airport-outbound-label`
-    1297          服务器         终端          是       :ref:`stop-airport-outbound-label`
-    1298          服务器         终端          是       :ref:`airport-inbound-label`
-    1299          服务器         终端          是       :ref:`stop-airport-inbound-label`
-    1300          服务器         终端          是       :ref:`kill-schedule-label`
-    1301          服务器         终端          是       :ref:`schedule-mission-label`
-    1302          服务器         终端          是       :ref:`schedule-recovery-label`
-    1304          服务器         终端          是       :ref:`schedule-goto-location-label`
-    1496          服务器         终端          是       :ref:`get-mission-file-content-label`
-    1497          服务器         终端          是       :ref:`delete-mission-file-label`
-    1498          服务器         终端          是       :ref:`upload-mission-file-label`
-    1499          服务器         终端          是       :ref:`request-mission-list-label`
-    1500          服务器         终端          否       :ref:`manual-control-label`
-    1501          服务器         终端          否       :ref:`gimbal-manual-control-label`
-    ===========  ============ ============= ======== ===============================
+    ===========  ================================ =========================================================
+    消息类别       格式                             描述                                     
+    ===========  ================================ =========================================================
+    定频消息       nest/{ClientID}/messages         定频发送的状态上报（设备发布给服务器）
+    事件消息       nest/{ClientID}/events           设备事件上报，当设备处于某些状态是上报（设备发布给服务器）
+    机库服务       nest/{ClientID}/services         用于机库与飞机控制（服务器发布给设备）
+    服务应答       nest/{ClientID}/services_reply   机库与飞机应答控制（设备发布给服务器）
+    监听控制       nest/{ClientID}/listener         手动控制飞行器的遥感包（服务器发布给设备）
+    ===========  ================================ =========================================================
 
-.. _result-label:
+    *文档中“终端应答”的标题的内容皆是是使用“服务应答”的 Topic 发布，不再赘述。*
+
+    *文档中“终端发布”的标题的内容皆是是使用“定频消息”的 Topic 发布，不再赘述。*
+
+    *文档中“终端事件发布”的标题的内容皆是是使用“事件消息”的 Topic 发布，不再赘述。*
+
+    *文档中“服务端发布”的标题的内容皆是是使用“机库服务”的 Topic 发布，不再赘述。*
+
+    *文档中“服务端控制发布”的标题的内容皆是是使用“监听控制”的 Topic 发布，不再赘述。*
+
+    *每一个设备在订阅并接收到“机库服务”的 Topic 之后，在处理完成后或者完成调度都会发布“服务应答”的 Topic。*  
+
+.. _mqtt-msg-type:
+
+MQTT Payload 类型
+-----------------------
+    Payload 数据格式为 Json。关键字：**msg_type**，用于代表数据类型，目前所以消息类型如下（持续更新）：
+
+    ===========  ================================== ===============================
+    消息类型       Topic 消息类别                        描述
+    ===========  ================================== ===============================
+    1             :ref:`定频消息 <msg-topic-list>`    :ref:`mqtt-telemetry`
+    2             :ref:`事件消息 <msg-topic-list>`    :ref:`mqtt-mission-progress`
+    3             :ref:`定频消息 <msg-topic-list>`    :ref:`mqtt-airport-status`
+    4             :ref:`定频消息 <msg-topic-list>`    :ref:`mqtt-schedule-status`
+    1000          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-arm`
+    1001          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-takeoff`
+    1002          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-land`
+    1003          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-rtl`
+    1004          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-hold`
+    1005          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-posctl`
+    1006          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-goto-location`
+    1007          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-takephoto`
+    1008          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-start-video`
+    1009          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-stop-video`
+    1010          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-start-mission`
+    1011          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-cancel-mission`
+    1012          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-continue-mission`
+    1013          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-push-rtmp-video-stream`
+    1014          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-set-zoom`
+    1200          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-airport-door`
+    1201          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-stop-airport-door`
+    1202          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-airport-lift`
+    1203          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-stop-airport-lift`
+    1204          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-airport-vertical`
+    1205          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-stop-airport-vertical`
+    1206          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-airport-horizontal`
+    1207          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-stop-airport-horizontal`
+    1296          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-airport-outbound`
+    1297          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-stop-airport-outbound`
+    1298          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-airport-inbound`
+    1299          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-stop-airport-inbound`
+    1300          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-kill-schedule`
+    1301          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-schedule-mission`
+    1302          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-schedule-recovery`
+    1304          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-schedule-goto-location`
+    1496          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-get-mission-file-content`
+    1497          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-delete-mission-file`
+    1498          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-upload-mission-file`
+    1499          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-request-mission-list`
+    1500          :ref:`监听控制 <msg-topic-list>`    :ref:`mqtt-manual-control`
+    1501          :ref:`监听控制 <msg-topic-list>`    :ref:`mqtt-gimbal-manual-control`
+    ===========  ================================== ===============================
+
+.. _mqtt-result:
 
 终端返回执行结果
 -----------------------
@@ -84,7 +108,7 @@ WebSocket 客户端
     13             指令执行失败
     ===========  =======================================
 
-.. _mission-object-label:
+.. _mqtt-mission-object:
 
 任务对象格式说明
 -----------------------
@@ -102,7 +126,7 @@ WebSocket 客户端
     is_fly_through    Bool        能       `false`: 在该航点位置进行短暂的悬停，`true`: 快速通过
     ================= =========  ======== ===============================
 
-.. _param-object-label:
+.. _mqtt-param-object:
 
 参数对象格式说明
 -----------------------
@@ -119,17 +143,17 @@ WebSocket 客户端
     step               Double      能       步长，0为没有步长
     ================= =========== ======== ===============================
 
-.. _telemetry-label:
+.. _mqtt-telemetry:
 
 飞行器遥测数据
 -----------------------
 
-终端发送
+终端发布
 ^^^^^^^^^^^^^^^
     ================= =========  ======== ===============================
     参数                类型       缺省      描述
     ================= =========  ======== ===============================
-    msg_type           Int         否       :ref:`msg-type-label`
+    msg_type           Int         否       :ref:`mqtt-msg-type`
     aircraft_id        String      否       飞行器 UUID
     timestamp          Long        否       UTC 时间
     landed_state       String      否       "On Gound","In Air","Taking Off","Landing"
@@ -180,17 +204,17 @@ WebSocket 客户端
             "msg_type": 1
         }
 
-.. _mission-progress-label:
+.. _mqtt-mission-progress:
 
 飞行器任务执行进度
 -----------------------
 
-终端发送
+终端事件发布
 ^^^^^^^^^^^^^^^
     ================= =========  ======== ===============================
     参数                类型       缺省      描述
     ================= =========  ======== ===============================
-    msg_type           Int         否       :ref:`msg-type-label`
+    msg_type           Int         否       :ref:`mqtt-msg-type`
     step               Int         否      0: 检查任务；1: 上传任务；2: 执行任务
     total              Int         否      当前步骤总进度
     sequence           Int         否      当前步骤进度
@@ -207,17 +231,17 @@ WebSocket 客户端
             "msg_type": 2
         }
 
-.. _airport-status-label:
+.. _mqtt-airport-status:
 
 机库状态上报
 -----------------------
 
-终端发送
+终端发布
 ^^^^^^^^^^^^^^^
     ===================== =========  ======== ===============================
     参数                    类型       缺省      描述
     ===================== =========  ======== ===============================
-    msg_type               Int         否       :ref:`msg-type-label`
+    msg_type               Int         否       :ref:`mqtt-msg-type`
     rainfall               Float       否      当前降雨量，单位 mm
     wind_speed             Float       否      当前风速，单位 m/s
     wind_direction         Float       否      当前风向，单位度
@@ -287,17 +311,17 @@ WebSocket 客户端
             "combinations_running": false
         }
 
-.. _schedule-status-label:
+.. _mqtt-schedule-status:
 
 联动任务状态
 -----------------------
 
-终端发送
+终端发布
 ^^^^^^^^^^^^^^^
     ================= =========  ======== ===============================
     参数                类型       缺省      描述
     ================= =========  ======== ===============================
-    msg_type           Int         否       :ref:`msg-type-label`
+    msg_type           Int         否       :ref:`mqtt-msg-type`
     running            Bool        否      是否在执行联动任务
     total_executed     Int         否      已经执行的联动任务次数
     current_job        String      否      当前联动类型（唯一）,"Mission", "GotoLocation", "Recovery"其中之一
@@ -314,7 +338,7 @@ WebSocket 客户端
             "current_job": "Recovery"
         }
 
-.. _arm-label:
+.. _mqtt-arm:
 
 飞行器解锁（不解锁飞机将不会有任何动作）
 ----------------------------------------------
@@ -325,8 +349,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -338,13 +362,13 @@ WebSocket 客户端
             "msg_type": 1000
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     armed         Bool      `true`: 解锁，`false`: 上锁
     ===========  ======== ===============================
 
@@ -357,7 +381,7 @@ WebSocket 客户端
             "msg_type": 1000
         }
 
-.. _takeoff-label:
+.. _mqtt-takeoff:
 
 飞行器切换起飞模式
 ----------------------------------------------
@@ -368,8 +392,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -381,13 +405,13 @@ WebSocket 客户端
             "msg_type": 1001
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -398,7 +422,7 @@ WebSocket 客户端
             "msg_type": 1001
         }
 
-.. _land-label:
+.. _mqtt-land:
 
 飞行器切换降落模式
 ----------------------------------------------
@@ -409,8 +433,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -422,13 +446,13 @@ WebSocket 客户端
             "msg_type": 1002
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -439,7 +463,7 @@ WebSocket 客户端
             "msg_type": 1002
         }
 
-.. _rtl-label:
+.. _mqtt-rtl:
 
 飞行器切换返航模式
 ----------------------------------------------
@@ -450,8 +474,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -463,13 +487,13 @@ WebSocket 客户端
             "msg_type": 1003
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -480,7 +504,7 @@ WebSocket 客户端
             "msg_type": 1003
         }
 
-.. _hold-label:
+.. _mqtt-hold:
 
 飞行器切换悬停模式
 ----------------------------------------------
@@ -491,8 +515,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -504,13 +528,13 @@ WebSocket 客户端
             "msg_type": 1004
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -521,7 +545,7 @@ WebSocket 客户端
             "msg_type": 1004
         }
 
-.. _posctl-label:
+.. _mqtt-posctl:
 
 飞行器切换位置模式
 ----------------------------------------------
@@ -532,8 +556,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -545,13 +569,13 @@ WebSocket 客户端
             "msg_type": 1005
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -562,7 +586,7 @@ WebSocket 客户端
             "msg_type": 1005
         }
 
-.. _goto-location-label:
+.. _mqtt-goto-location:
 
 飞行器到达指定点悬停
 ----------------------------------------------
@@ -573,8 +597,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -586,13 +610,13 @@ WebSocket 客户端
             "msg_type": 1006
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     latitude      Double    目标纬度
     longitude     Double    目标经度
     altitude      Double    目标高度（相对高度）
@@ -611,7 +635,7 @@ WebSocket 客户端
             "msg_type": 1006
         }
 
-.. _takephoto-label:
+.. _mqtt-takephoto:
 
 相机拍照
 ----------------------------------------------
@@ -622,8 +646,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -635,13 +659,13 @@ WebSocket 客户端
             "msg_type": 1007
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -652,7 +676,7 @@ WebSocket 客户端
             "msg_type": 1007
         }
 
-.. _start-video-label:
+.. _mqtt-start-video:
 
 相机开始录像
 ----------------------------------------------
@@ -663,8 +687,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -676,13 +700,13 @@ WebSocket 客户端
             "msg_type": 1008
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -693,7 +717,7 @@ WebSocket 客户端
             "msg_type": 1008
         }
 
-.. _stop-video-label:
+.. _mqtt-stop-video:
 
 相机停止录像
 ----------------------------------------------
@@ -704,8 +728,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -717,13 +741,13 @@ WebSocket 客户端
             "msg_type": 1009
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -734,7 +758,7 @@ WebSocket 客户端
             "msg_type": 1009
         }
 
-.. _start-mission-label:
+.. _mqtt-start-mission:
 
 飞行器开始执行任务
 ----------------------------------------------
@@ -745,8 +769,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -758,13 +782,13 @@ WebSocket 客户端
             "msg_type": 1010
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     name          String    需要执行的任务文件名称
     ===========  ======== ===============================
 
@@ -777,7 +801,7 @@ WebSocket 客户端
             "msg_type": 1010
         }
 
-.. _cancel-mission-label:
+.. _mqtt-cancel-mission:
 
 飞行器取消当前任务（触发返航）
 ----------------------------------------------
@@ -788,8 +812,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -801,13 +825,13 @@ WebSocket 客户端
             "msg_type": 1011
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -818,7 +842,7 @@ WebSocket 客户端
             "msg_type": 1011
         }
 
-.. _continue-mission-label:
+.. _mqtt-continue-mission:
 
 飞行器继续当前任务（开始任务之后该命令有效）
 ----------------------------------------------
@@ -829,8 +853,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -842,13 +866,13 @@ WebSocket 客户端
             "msg_type": 1012
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -859,7 +883,7 @@ WebSocket 客户端
             "msg_type": 1012
         }
 
-.. _push-rtmp-video-stream-label:
+.. _mqtt-push-rtmp-video-stream:
 
 设置推送的码流到指定地址
 ----------------------------------------------
@@ -870,8 +894,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -883,13 +907,13 @@ WebSocket 客户端
             "msg_type": 1013
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     url           String    RTMP 推送地址
     ===========  ======== ===============================
 
@@ -902,7 +926,7 @@ WebSocket 客户端
             "url": "rtmp://127.0.0.1:1234"
         }
 
-.. _set-zoom-label:
+.. _mqtt-set-zoom:
 
 设置相机变倍倍数
 ----------------------------------------------
@@ -913,8 +937,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -926,13 +950,13 @@ WebSocket 客户端
             "msg_type": 1014
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     level         Int       变焦等级
     ===========  ======== ===============================
 
@@ -945,7 +969,7 @@ WebSocket 客户端
             "level": 10
         }
 
-.. _get-camera-param-label:
+.. _mqtt-get-camera-param:
 
 获得相机参数值
 ----------------------------------------------
@@ -956,8 +980,8 @@ WebSocket 客户端
     ===========  ========== ===============================
     参数          类型       描述
     ===========  ========== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     values       DoubleList 对应参数值列表，类型只有整数与浮点数
     ===========  ========== ===============================
 
@@ -971,13 +995,13 @@ WebSocket 客户端
             "values": [1, 2000, 1]
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ========== ===============================
     参数          类型       描述
     ===========  ========== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     names        StringList 参数名称列表
     ===========  ========== ===============================
 
@@ -990,7 +1014,7 @@ WebSocket 客户端
             "names": ["CAM_MODE","CAM_ISO","CAM_WBMODE"]
         }
 
-.. _set-camera-param-label:
+.. _mqtt-set-camera-param:
 
 设置相机参数值
 ----------------------------------------------
@@ -1001,8 +1025,8 @@ WebSocket 客户端
     ===========  ========== ===============================
     参数          类型       描述
     ===========  ========== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     reason       String     失败原因，成功没有该字段
     ===========  ========== ===============================
 
@@ -1015,13 +1039,13 @@ WebSocket 客户端
             "msg_type": 1197
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ========== ===============================
     参数          类型       描述
     ===========  ========== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     names        StringList 参数名称列表
     values       DoubleList 对应参数值列表，类型只有整数与浮点数
     ===========  ========== ===============================
@@ -1036,7 +1060,7 @@ WebSocket 客户端
             "values": [1, 2000, 1]
         }
 
-.. _list-camera-param-label:
+.. _mqtt-list-camera-param:
 
 获得相机参数列表
 ----------------------------------------------
@@ -1047,8 +1071,8 @@ WebSocket 客户端
     ===========  ========== ===============================
     参数          类型       描述
     ===========  ========== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     names        StringList 参数名称列表
     ===========  ========== ===============================
 
@@ -1062,13 +1086,13 @@ WebSocket 客户端
             "names": ["CAM_MODE","CAM_ISO","CAM_WBMODE"]
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ========== ===============================
     参数          类型       描述
     ===========  ========== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ========== ===============================
 
 例子
@@ -1079,7 +1103,7 @@ WebSocket 客户端
             "msg_type": 1198
         }
 
-.. _describe-camera-param-label:
+.. _mqtt-describe-camera-param:
 
 获得相机参数类型与范围信息
 ----------------------------------------------
@@ -1090,9 +1114,9 @@ WebSocket 客户端
     ============ ========== ===============================
     参数          类型       描述
     ============ ========== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
-    descriptors  ObjectList :ref:`param-object-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
+    descriptors  ObjectList :ref:`mqtt-param-object`
     ============ ========== ===============================
 
 例子
@@ -1121,13 +1145,13 @@ WebSocket 客户端
             ]
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ========== ===============================
     参数          类型       描述
     ===========  ========== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     names        StringList 参数名称列表
     ===========  ========== ===============================
 
@@ -1140,7 +1164,7 @@ WebSocket 客户端
             "names": ["CAM_WBMODE","CAM_ZOOM_SPEED"]
         }
 
-.. _airport-door-label:
+.. _mqtt-airport-door:
 
 机库舱门控制
 ----------------------------------------------
@@ -1151,8 +1175,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1164,13 +1188,13 @@ WebSocket 客户端
             "msg_type": 1200
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     open          Bool      true：开舱门；false：关舱门
     ===========  ======== ===============================
 
@@ -1183,7 +1207,7 @@ WebSocket 客户端
             "open": true
         }
 
-.. _stop-airport-door-label:
+.. _mqtt-stop-airport-door:
 
 取消舱门动作
 ----------------------------------------------
@@ -1194,8 +1218,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1207,13 +1231,13 @@ WebSocket 客户端
             "msg_type": 1201
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -1224,7 +1248,7 @@ WebSocket 客户端
             "msg_type": 1201
         }
 
-.. _airport-lift-label:
+.. _mqtt-airport-lift:
 
 机库推举控制
 ----------------------------------------------
@@ -1235,8 +1259,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1248,13 +1272,13 @@ WebSocket 客户端
             "msg_type": 1202
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     up            Bool      true：升推举；false：降推举
     ===========  ======== ===============================
 
@@ -1267,7 +1291,7 @@ WebSocket 客户端
             "up": true
         }
 
-.. _stop-airport-lift-label:
+.. _mqtt-stop-airport-lift:
 
 取消推举动作
 ----------------------------------------------
@@ -1278,8 +1302,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1291,13 +1315,13 @@ WebSocket 客户端
             "msg_type": 1203
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -1308,7 +1332,7 @@ WebSocket 客户端
             "msg_type": 1203
         }
 
-.. _airport-vertical-label:
+.. _mqtt-airport-vertical:
 
 机库前后限位控制
 ----------------------------------------------
@@ -1319,8 +1343,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1332,13 +1356,13 @@ WebSocket 客户端
             "msg_type": 1204
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     fix           Bool      true：归中；false：释放
     ===========  ======== ===============================
 
@@ -1351,7 +1375,7 @@ WebSocket 客户端
             "fix": true
         }
 
-.. _stop-airport-vertical-label:
+.. _mqtt-stop-airport-vertical:
 
 取消前后限位动作
 ----------------------------------------------
@@ -1362,8 +1386,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1375,13 +1399,13 @@ WebSocket 客户端
             "msg_type": 1205
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -1392,7 +1416,7 @@ WebSocket 客户端
             "msg_type": 1205
         }
 
-.. _airport-horizontal-label:
+.. _mqtt-airport-horizontal:
 
 机库左右限位控制
 ----------------------------------------------
@@ -1403,8 +1427,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1416,13 +1440,13 @@ WebSocket 客户端
             "msg_type": 1206
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     fix           Bool      true：归中；false：释放
     ===========  ======== ===============================
 
@@ -1435,7 +1459,7 @@ WebSocket 客户端
             "fix": true
         }
 
-.. _stop-airport-horizontal-label:
+.. _mqtt-stop-airport-horizontal:
 
 取消左右限位动作
 ----------------------------------------------
@@ -1446,8 +1470,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1459,13 +1483,13 @@ WebSocket 客户端
             "msg_type": 1207
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -1476,7 +1500,7 @@ WebSocket 客户端
             "msg_type": 1207
         }
 
-.. _airport-outbound-label:
+.. _mqtt-airport-outbound:
 
 机库出库控制
 ----------------------------------------------
@@ -1487,8 +1511,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1500,13 +1524,13 @@ WebSocket 客户端
             "msg_type": 1296
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -1517,7 +1541,7 @@ WebSocket 客户端
             "msg_type": 1296
         }
 
-.. _stop-airport-outbound-label:
+.. _mqtt-stop-airport-outbound:
 
 取消出库动作
 ----------------------------------------------
@@ -1528,8 +1552,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1541,13 +1565,13 @@ WebSocket 客户端
             "msg_type": 1297
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -1558,7 +1582,7 @@ WebSocket 客户端
             "msg_type": 1297
         }
 
-.. _airport-inbound-label:
+.. _mqtt-airport-inbound:
 
 机库入库控制
 ----------------------------------------------
@@ -1569,8 +1593,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1582,13 +1606,13 @@ WebSocket 客户端
             "msg_type": 1298
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -1599,7 +1623,7 @@ WebSocket 客户端
             "msg_type": 1298
         }
 
-.. _stop-airport-inbound-label:
+.. _mqtt-stop-airport-inbound:
 
 取消入库动作
 ----------------------------------------------
@@ -1610,8 +1634,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1623,13 +1647,13 @@ WebSocket 客户端
             "msg_type": 1299
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -1640,7 +1664,7 @@ WebSocket 客户端
             "msg_type": 1299
         }
 
-.. _kill-schedule-label:
+.. _mqtt-kill-schedule:
 
 终止飞机与机库联动计划
 ----------------------------------------------
@@ -1651,8 +1675,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1664,13 +1688,13 @@ WebSocket 客户端
             "msg_type": 1300
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -1681,7 +1705,7 @@ WebSocket 客户端
             "msg_type": 1300
         }
 
-.. _schedule-mission-label:
+.. _mqtt-schedule-mission:
 
 机库与飞机联动完成一次完整的任务
 ----------------------------------------------
@@ -1692,8 +1716,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1705,13 +1729,13 @@ WebSocket 客户端
             "msg_type": 1301
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     name          String    需要执行的任务文件名称
     ===========  ======== ===============================
 
@@ -1724,7 +1748,7 @@ WebSocket 客户端
             "msg_type": 1301
         }
 
-.. _schedule-recovery-label:
+.. _mqtt-schedule-recovery:
 
 机库与飞机联动完成一次回收
 ----------------------------------------------
@@ -1735,8 +1759,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1748,13 +1772,13 @@ WebSocket 客户端
             "msg_type": 1302
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -1765,7 +1789,7 @@ WebSocket 客户端
             "msg_type": 1302
         }
 
-.. _schedule-goto-location-label:
+.. _mqtt-schedule-goto-location:
 
 机库与飞机联动完成出库并飞行至指定点
 ----------------------------------------------
@@ -1776,8 +1800,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1789,13 +1813,13 @@ WebSocket 客户端
             "msg_type": 1304
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     latitude      Double    目标纬度
     longitude     Double    目标经度
     altitude      Double    目标高度（相对高度）
@@ -1814,7 +1838,7 @@ WebSocket 客户端
             "msg_type": 1304
         }
 
-.. _get-mission-file-content-label:
+.. _mqtt-get-mission-file-content:
 
 获得指定任务文件的内容
 ----------------------------------------------
@@ -1825,10 +1849,10 @@ WebSocket 客户端
     ============= ========== ===============================
     参数           类型       描述
     ============= ========== ===============================
-    msg_type       Int       :ref:`msg-type-label`
-    result         Int       :ref:`result-label`
+    msg_type       Int       :ref:`mqtt-msg-type`
+    result         Int       :ref:`mqtt-result`
     filename       String    任务文件名
-    missionItems   Object[]  :ref:`mission-object-label`
+    missionItems   Object[]  :ref:`mqtt-mission-object`
     ============= ========== ===============================
 
     **只支持格式为mission任务文件内容查看**
@@ -1868,13 +1892,13 @@ WebSocket 客户端
             "msg_type": 1496
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     =============  ======== ===============================
     参数            类型       描述
     =============  ======== ===============================
-    msg_type       Int       :ref:`msg-type-label`
+    msg_type       Int       :ref:`mqtt-msg-type`
     name           String    任务文件的名字
     =============  ======== ===============================
 
@@ -1887,7 +1911,7 @@ WebSocket 客户端
             "msg_type": 1496
         }
 
-.. _delete-mission-file-label:
+.. _mqtt-delete-mission-file:
 
 删除飞行器上的任务
 ----------------------------------------------
@@ -1898,8 +1922,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     filename      String    已经删除的任务文件的名称
     ===========  ======== ===============================
 
@@ -1913,13 +1937,13 @@ WebSocket 客户端
             "msg_type": 1497
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     =============  ======== ===============================
     参数            类型       描述
     =============  ======== ===============================
-    msg_type       Int       :ref:`msg-type-label`
+    msg_type       Int       :ref:`mqtt-msg-type`
     name           String    任务文件的名字
     =============  ======== ===============================
 
@@ -1932,7 +1956,7 @@ WebSocket 客户端
             "msg_type": 1497
         }
 
-.. _upload-mission-file-label:
+.. _mqtt-upload-mission-file:
 
 上传任务到飞行器
 ----------------------------------------------
@@ -1943,8 +1967,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     filename      String    返回实际创建任务文件的名称
     ===========  ======== ===============================
 
@@ -1958,15 +1982,15 @@ WebSocket 客户端
             "msg_type": 1498
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     =============  ======== ===============================
     参数            类型       描述
     =============  ======== ===============================
-    msg_type       Int       :ref:`msg-type-label`
+    msg_type       Int       :ref:`mqtt-msg-type`
     name           String    期望任务文件的名字
-    missionItems   Object[]  :ref:`mission-object-label`
+    missionItems   Object[]  :ref:`mqtt-mission-object`
     =============  ======== ===============================
 
 例子
@@ -2003,7 +2027,7 @@ WebSocket 客户端
             "msg_type": 1498
         }
 
-.. _request-mission-list-label:
+.. _mqtt-request-mission-list:
 
 请求飞行器上的航点列表
 ----------------------------------------------
@@ -2014,8 +2038,8 @@ WebSocket 客户端
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
-    result        Int       :ref:`result-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
     plans        String[]   航点文件列表
     ===========  ======== ===============================
 
@@ -2029,13 +2053,13 @@ WebSocket 客户端
             "msg_type": 1499
         }
 
-服务端发送
+服务端发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     ===========  ======== ===============================
 
 例子
@@ -2046,18 +2070,18 @@ WebSocket 客户端
             "msg_type": 1499
         }
 
-.. _manual-control-label:
+.. _mqtt-manual-control:
 
 飞行器手动控制包
 ----------------------------------------------
 
-服务端发送
+服务端控制发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     x             Double    飞行器前后控制（-1.0~1.0）
     y             Double    飞行器左右控制（-1.0~1.0）
     z             Double    飞行器上下控制（-1.0~1.0）
@@ -2076,18 +2100,18 @@ WebSocket 客户端
             "msg_type": 1500
         }
 
-.. _gimbal-manual-control-label:
+.. _mqtt-gimbal-manual-control:
 
 云台角度控制
 ----------------------------------------------
 
-服务端发送
+服务端控制发布
 ^^^^^^^^^^^^^^^
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     pitch         Double    云台 Pitch，单位度
     yaw           Double    云台 Yaw，单位度
     ===========  ======== ===============================
