@@ -172,6 +172,7 @@ MQTT Payload 类型
     gps_fix_type       String      否       定位精度，"No GPS","No Fix","Fix 2D","Fix 3D"(从这个开始，已经完成定位),"Fix Dgps","Rtk Float","Rtk Fixed"
     aircraft_speed     Double      否       飞机飞行速度
     battery_percent    Double      否       飞机电池电量（0.0～1.0）
+    camera_model       String      能       相机型号（唯一）
     gimbal_roll        Double      能       云台 Roll，单位度
     gimbal_pitch       Double      能       云台 Pitch，单位度
     gimbal_yaw         Double      能       云台 Yaw，单位度
