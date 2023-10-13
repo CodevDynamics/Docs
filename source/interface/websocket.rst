@@ -30,6 +30,7 @@ WebSocket 客户端
     1012          服务器         终端          是       :ref:`continue-mission-label`
     1013          服务器         终端          是       :ref:`push-rtmp-video-stream-label`
     1014          服务器         终端          是       :ref:`set-zoom-label`
+    1015          服务器         终端          是       :ref:`aircraft-on-label`
     1196          服务器         终端          是       :ref:`get-camera-param-label`
     1197          服务器         终端          是       :ref:`set-camera-param-label`
     1198          服务器         终端          是       :ref:`list-camera-param-label`
@@ -229,6 +230,7 @@ WebSocket 客户端
     plc_power              Bool        否      PLC设备是否打开供电
     aircraft_charging      Bool        否      飞机是否在充电
     aircraft_fit           Bool        否      飞机是否固定住
+    aircraft_on            Bool        否      飞机是否开机，仅在 aircraft_fit=true 时有效
     door_opening           Bool        否      舱门是否打开中
     door_closing           Bool        否      舱门是否关闭中
     door_opened            Bool        否      舱门是否打开的
@@ -268,6 +270,7 @@ WebSocket 客户端
             "plc_power": false,
             "aircraft_charging": true,
             "aircraft_fit": true,
+            "aircraft_on": false,
             "door_opening": false,
             "door_closing": false,
             "door_opened": true,
@@ -943,6 +946,49 @@ WebSocket 客户端
         {
             "msg_type": 1014,
             "level": 10
+        }
+
+.. _aircraft-on-label:
+
+开关飞机
+----------------------------------------------
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    result        Int       :ref:`result-label`
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1015
+        }
+
+服务端发送
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    on            Bool      false：关，true：开
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1015,
+            "on": true
         }
 
 .. _get-camera-param-label:

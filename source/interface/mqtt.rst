@@ -58,6 +58,7 @@ MQTT Payload 类型
     1012          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-continue-mission`
     1013          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-push-rtmp-video-stream`
     1014          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-set-zoom`
+    1015          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-aircraft-on`
     1200          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-airport-door`
     1201          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-stop-airport-door`
     1202          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-airport-lift`
@@ -967,6 +968,49 @@ MQTT Payload 类型
         {
             "msg_type": 1014,
             "level": 10
+        }
+
+.. _mqtt-aircraft-on:
+
+开关飞机
+----------------------------------------------
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    result        Int       :ref:`result-label`
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1015
+        }
+
+服务端发布
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    on            Bool      false：关，true：开
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1015,
+            "on": true
         }
 
 .. _mqtt-get-camera-param:
