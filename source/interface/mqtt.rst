@@ -59,6 +59,10 @@ MQTT Payload 类型
     1013          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-push-rtmp-video-stream`
     1014          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-set-zoom`
     1015          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-aircraft-on`
+    1196          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-get-camera-param`
+    1197          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-set-camera-param`
+    1198          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-list-camera-param`
+    1199          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-describe-camera-param`
     1200          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-airport-door`
     1201          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-stop-airport-door`
     1202          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-airport-lift`
