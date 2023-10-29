@@ -15,6 +15,7 @@ WebSocket 客户端
     2             终端          服务器         否       :ref:`mission-progress-label`
     3             终端          服务器         否       :ref:`airport-status-label`
     4             终端          服务器         否       :ref:`schedule-status-label`
+    5             终端          服务器         否       :ref:`disconnected-telemetry-label`
     1000          服务器         终端          是       :ref:`arm-label`
     1001          服务器         终端          是       :ref:`takeoff-label`
     1002          服务器         终端          是       :ref:`land-label`
@@ -31,6 +32,7 @@ WebSocket 客户端
     1013          服务器         终端          是       :ref:`push-rtmp-video-stream-label`
     1014          服务器         终端          是       :ref:`set-zoom-label`
     1015          服务器         终端          是       :ref:`aircraft-on-label`
+    1016          服务器         终端          是       :ref:`push-rtmp-ip-camera-label`
     1196          服务器         终端          是       :ref:`get-camera-param-label`
     1197          服务器         终端          是       :ref:`set-camera-param-label`
     1198          服务器         终端          是       :ref:`list-camera-param-label`
@@ -51,6 +53,7 @@ WebSocket 客户端
     1301          服务器         终端          是       :ref:`schedule-mission-label`
     1302          服务器         终端          是       :ref:`schedule-recovery-label`
     1304          服务器         终端          是       :ref:`schedule-goto-location-label`
+    1399          服务器         终端          是       :ref:`schedule-rtl-in-idle-label`
     1496          服务器         终端          是       :ref:`get-mission-file-content-label`
     1497          服务器         终端          是       :ref:`delete-mission-file-label`
     1498          服务器         终端          是       :ref:`upload-mission-file-label`
@@ -305,6 +308,7 @@ WebSocket 客户端
     running            Bool        否      是否在执行联动任务
     total_executed     Int         否      已经执行的联动任务次数
     current_job        String      否      当前联动类型（唯一）,"Mission", "GotoLocation", "Recovery"其中之一
+    rtl_in_idle        String      否      飞行器返航将会自动触发的联动任务, "Recovery", "AccurateLand"其中之一, 空为无触发联动任务
     ================= =========  ======== ===============================
 
 例子
@@ -315,7 +319,66 @@ WebSocket 客户端
             "msg_type": 4,
             "running": true,
             "total_executed": 20,
-            "current_job": "Recovery"
+            "current_job": "Recovery",
+            "rtl_in_idle": ""
+        }
+
+.. _disconnected-telemetry-label:
+
+飞行器断连事件包
+-----------------------
+    *飞行器断联之后会触发一次，记录着飞行器最后一帧数据信息*
+
+终端发送
+^^^^^^^^^^^^^^^
+    ================= =========  ======== ===============================
+    参数                类型       缺省      描述
+    ================= =========  ======== ===============================
+    msg_type           Int         否       :ref:`msg-type-label`
+    aircraft_id        String      否       飞行器 UUID
+    timestamp          Long        否       UTC 时间
+    landed_state       String      否       "On Gound","In Air","Taking Off","Landing"
+    flight_mode        String      否       "Ready"(可以起飞),"Takeoff","Hold","Mission","Return To Launch","Land","Posctl"
+    home               Double[]    否       Home 点，4个浮点型，依次是纬度、经度、海拔高度、相对高度
+    position           Double[]    否       飞行器当前位置，4个浮点型，依次是纬度、经度、海拔高度、相对高度
+    aircraft_roll      Double      否       飞机 Roll，单位度
+    aircraft_pitch     Double      否       飞机 Pitch，单位度
+    aircraft_yaw       Double      否       飞机 Yaw，单位度
+    satellite_number   Int         否       GPS 卫星数
+    gps_fix_type       String      否       定位精度，"No GPS","No Fix","Fix 2D","Fix 3D"(从这个开始，已经完成定位),"Fix Dgps","Rtk Float","Rtk Fixed"
+    aircraft_speed     Double      否       飞机飞行速度
+    battery_percent    Double      否       飞机电池电量（0.0～1.0）
+    ================= =========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "aircraft_id": "0600003633353833305117022024",
+            "timestamp": 179525156,
+            "landed_state": "On Ground",
+            "flight_mode": "Posctl",
+            "home": [
+                23.173951,
+                113.4198426,
+                31.09400177,
+                0
+            ],
+            "position": [
+                23.1739512,
+                113.4198423,
+                30.76000214,
+                -0.3340000212
+            ],
+            "aircraft_roll": -0.962998867,
+            "aircraft_pitch": 0.8330261111,
+            "aircraft_yaw": 9.299003601,
+            "satellite_number": 10,
+            "gps_fix_type": "Fix 3D",
+            "aircraft_speed": 0.05999999866,
+            "battery_percent": 100,
+            "msg_type": 5
         }
 
 .. _arm-label:
@@ -865,7 +928,7 @@ WebSocket 客户端
 
 .. _push-rtmp-video-stream-label:
 
-设置推送的码流到指定地址
+设置推送飞行器的码流到指定地址
 ----------------------------------------------
 
 终端应答
@@ -990,6 +1053,49 @@ WebSocket 客户端
         {
             "msg_type": 1015,
             "on": true
+        }
+
+.. _push-rtmp-ip-camera-label:
+
+设置推送机库的码流到指定地址
+----------------------------------------------
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    result        Int       :ref:`result-label`
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1016
+        }
+
+服务端发送
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    url           String    RTMP 推送地址
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1016,
+            "url": "rtmp://127.0.0.1:1234"
         }
 
 .. _get-camera-param-label:
@@ -1859,6 +1965,49 @@ WebSocket 客户端
             "altitude": 50,
             "yaw": 66.8,
             "msg_type": 1304
+        }
+
+.. _schedule-rtl-in-idle-label:
+
+设置飞行器返航自动触发联动任务
+----------------------------------------------
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    result        Int       :ref:`result-label`
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1399
+        }
+
+服务端发送
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    job          String    飞行器返航后需要触发的联动任务，目前仅有两个："Recovery"-回收 "AccurateLand"-精准降落，置空为不触发
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "job": "Recovery"
+            "msg_type": 1399
         }
 
 .. _get-mission-file-content-label:
