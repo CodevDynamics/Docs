@@ -44,6 +44,7 @@ MQTT Payload 类型
     3             :ref:`定频消息 <msg-topic-list>`    :ref:`mqtt-airport-status`
     4             :ref:`定频消息 <msg-topic-list>`    :ref:`mqtt-schedule-status`
     5             :ref:`事件消息 <msg-topic-list>`    :ref:`mqtt-disconnected-telemetry`
+    6             :ref:`事件消息 <msg-topic-list>`    :ref:`mqtt-airport-online`
     1000          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-arm`
     1001          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-takeoff`
     1002          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-land`
@@ -405,6 +406,34 @@ MQTT Payload 类型
             "aircraft_speed": 0.05999999866,
             "battery_percent": 100,
             "msg_type": 5
+        }
+
+.. _mqtt-airport-online:
+
+设备上线事件
+-----------------------
+    *设备连接上之后自动发送一次*
+
+终端发布
+^^^^^^^^^^^^^^^
+    ================= =========  ======== ===============================
+    参数                类型       缺省      描述
+    ================= =========  ======== ===============================
+    msg_type           Int         否       :ref:`msg-type-label`
+    id                 String      否      唯一序列号
+    model              String      否      型号
+    version            String      否      API 版本号
+    ================= =========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 6,
+            "id": "0242AC110002",
+            "model": "Airport",
+            "version": "1.0.0"
         }
 
 .. _mqtt-arm:
@@ -2189,6 +2218,7 @@ MQTT Payload 类型
     msg_type       Int       :ref:`mqtt-msg-type`
     name           String    期望任务文件的名字
     missionItems   Object[]  :ref:`mqtt-mission-object`
+    overw          Bool      是否覆盖，如果文件名相同，否则将加入'_%d'后缀，缺省值为 False
     =============  ======== ===============================
 
 例子

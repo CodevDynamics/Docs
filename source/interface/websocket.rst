@@ -16,6 +16,7 @@ WebSocket 客户端
     3             终端          服务器         否       :ref:`airport-status-label`
     4             终端          服务器         否       :ref:`schedule-status-label`
     5             终端          服务器         否       :ref:`disconnected-telemetry-label`
+    6             终端          服务器         否       :ref:`airport-online-label`
     1000          服务器         终端          是       :ref:`arm-label`
     1001          服务器         终端          是       :ref:`takeoff-label`
     1002          服务器         终端          是       :ref:`land-label`
@@ -379,6 +380,34 @@ WebSocket 客户端
             "aircraft_speed": 0.05999999866,
             "battery_percent": 100,
             "msg_type": 5
+        }
+
+.. _airport-online-label:
+
+设备上线消息
+-----------------------
+    *设备连接上之后自动发送一次*
+
+终端发送
+^^^^^^^^^^^^^^^
+    ================= =========  ======== ===============================
+    参数                类型       缺省      描述
+    ================= =========  ======== ===============================
+    msg_type           Int         否       :ref:`msg-type-label`
+    id                 String      否      唯一序列号
+    model              String      否      型号
+    version            String      否      API 版本号
+    ================= =========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 6,
+            "id": "0242AC110002",
+            "model": "Airport",
+            "version": "1.0.0"
         }
 
 .. _arm-label:
@@ -2163,6 +2192,7 @@ WebSocket 客户端
     msg_type       Int       :ref:`msg-type-label`
     name           String    期望任务文件的名字
     missionItems   Object[]  :ref:`mission-object-label`
+    overw          Bool      是否覆盖，如果文件名相同，否则将加入'_%d'后缀，缺省值为 False
     =============  ======== ===============================
 
 例子
