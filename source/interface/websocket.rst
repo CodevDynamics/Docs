@@ -34,6 +34,8 @@ WebSocket 客户端
     1014          服务器         终端          是       :ref:`set-zoom-label`
     1015          服务器         终端          是       :ref:`aircraft-on-label`
     1016          服务器         终端          是       :ref:`push-rtmp-ip-camera-label`
+    1017          服务器         终端          是       :ref:`aircraft-charge-label`
+    1018          服务器         终端          是       :ref:`radio-power-label`
     1196          服务器         终端          是       :ref:`get-camera-param-label`
     1197          服务器         终端          是       :ref:`set-camera-param-label`
     1198          服务器         终端          是       :ref:`list-camera-param-label`
@@ -104,7 +106,10 @@ WebSocket 客户端
     camera_action     Int         能       0: 无动作，1: 拍照，4: 开始录像，5: 停止录像
     gimbal_pitch      Double      能       云台 Pitch
     gimbal_yaw        Double      能       云台 Yaw
-    is_fly_through    Bool        能       `false`: 在该航点位置进行短暂的悬停，`true`: 快速通过
+    is_fly_through    Bool        能       `false`: 在该航点位置进行短暂（0.5s）的悬停，`true`: 快速通过
+    yaw_deg           Double      能       飞机机头朝向（0-360度）
+    camera_zoom       Double      能       相机Zoom倍数值，根据每个相机实际范围决定，如：30倍，值的范围1-30
+    loiter_time_s     Double      能       飞机在该点悬停时间，如果该值被设置，`is_fly_through`: 将无效
     ================= =========  ======== ===============================
 
 .. _param-object-label:
@@ -231,8 +236,13 @@ WebSocket 客户端
     humidity               Float       否      当前机库内湿度，单位 %
     setting_temp           Float       否      当前机库空调设定温度
     pressure               Float       否      当前机库所在位置气压
+    charge_voltage         Float       否      充电电压
+    charge_current         Float       否      充电电流（Codev 无）
+    charge_percent         Float       否      充电百分比（DJI 无）
     aircondition_running   Bool        否      空调是否运行
     plc_power              Bool        否      PLC设备是否打开供电
+    radio_power            Bool        否      无线传输设备开关（Codev：图传&GPS；DJI：无效）
+    ir_led                 Bool        否      降落灯开关（自动化开/关，无需控制）（Codev：精准降落信标；DJI：夜间灯；）
     aircraft_charging      Bool        否      飞机是否在充电
     aircraft_fit           Bool        否      飞机是否固定住
     aircraft_on            Bool        否      飞机是否开机，仅在 aircraft_fit=true 时有效
@@ -395,7 +405,7 @@ WebSocket 客户端
     ================= =========  ======== ===============================
     msg_type           Int         否       :ref:`msg-type-label`
     id                 String      否      唯一序列号
-    model              String      否      型号
+    model              String      否      型号（Codev：A300、ARS300; DJI: AD3、ARS350）
     version            String      否      API 版本号
     ================= =========  ======== ===============================
 
@@ -406,8 +416,8 @@ WebSocket 客户端
         {
             "msg_type": 6,
             "id": "0242AC110002",
-            "model": "Airport",
-            "version": "1.0.0"
+            "model": "A300",
+            "version": "1.0.0-1.1.1-1.2.1"
         }
 
 .. _arm-label:
@@ -1125,6 +1135,95 @@ WebSocket 客户端
         {
             "msg_type": 1016,
             "url": "rtmp://127.0.0.1:1234"
+        }
+
+.. _aircraft-charge-label:
+
+飞机充电开关
+----------------------------------------------
+    *Codev飞机自动充电，目前无法开关*
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    result        Int       :ref:`result-label`
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1017
+        }
+
+服务端发送
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    on            Bool      false：关，true：开
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1017,
+            "on": true
+        }
+
+.. _radio-power-label:
+
+无线传输设备（遥控器）开关机
+----------------------------------------------
+    *用于Codev飞机：图传&GPS，有反馈，机库状态上报中的字段‘radio_power’有效。 用于DJI飞机：遥控器，无反馈，机库状态上报中的字段‘radio_power’无效*
+    *故，当使用DJI飞机时，‘on’ 传入参数无效。*
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    result        Int       :ref:`result-label`
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1018
+        }
+
+服务端发送
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    on            Bool      false：关，true：开
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1018,
+            "on": true
         }
 
 .. _get-camera-param-label:
@@ -2056,7 +2155,7 @@ WebSocket 客户端
     missionItems   Object[]  :ref:`mission-object-label`
     ============= ========== ===============================
 
-    **只支持格式为mission任务文件内容查看**
+    **2023年12月起之后的版本同时支持plan和mission格式查看, plan格式需要机库连接过飞机才支持转译**
 
 例子
 """"""""""""
