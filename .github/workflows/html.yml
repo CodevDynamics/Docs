@@ -9,10 +9,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: install sphinx
         run: |
+          sudo apt-get update
           sudo apt-get install plantuml
           pip3 install sphinx sphinx-autobuild sphinx_rtd_theme sphinxcontrib-plantuml PyYAML
           pip3 install -U git+https://github.com/CodevDynamics/sphinxcontrib-ros.git@master#egg=sphinxcontrib-ros

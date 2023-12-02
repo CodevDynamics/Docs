@@ -101,7 +101,7 @@ WebSocket 客户端
     latitude          Double      否       航点纬度
     longitude         Double      否       航点经度
     altitude          Double      否       航点相对高度（相对 Home 点）
-    vehicle_action    Int         能       0: 普通航点，1: 起飞，2: 降落
+    vehicle_action    Int         能       0: 普通航点，1: 起飞，2: 降落，5: 返航
     speed             Double      能       执行到该航点时，切换飞行器速度
     camera_action     Int         能       0: 无动作，1: 拍照，4: 开始录像，5: 停止录像
     gimbal_pitch      Double      能       云台 Pitch
@@ -2153,9 +2153,10 @@ WebSocket 客户端
     result         Int       :ref:`result-label`
     filename       String    任务文件名
     missionItems   Object[]  :ref:`mission-object-label`
+    errorMessage   String    错误信息，仅在错误时出现
     ============= ========== ===============================
 
-    **2023年12月起之后的版本同时支持plan和mission格式查看, plan格式需要机库连接过飞机才支持转译**
+    **2023年12月起之后的版本同时支持plan和mission格式查看, plan将会转译成mission格式返回，但是mission格式功能有限，不一定可以转换成功**
 
 例子
 """"""""""""
