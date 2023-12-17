@@ -47,6 +47,7 @@ MQTT Payload 类型
     4             :ref:`定频消息 <msg-topic-list>`    :ref:`mqtt-schedule-status`
     5             :ref:`事件消息 <msg-topic-list>`    :ref:`mqtt-disconnected-telemetry`
     6             :ref:`事件消息 <msg-topic-list>`    :ref:`mqtt-airport-online`
+    7             :ref:`事件消息 <msg-topic-list>`    :ref:`mqtt-upload-finished`
     1000          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-arm`
     1001          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-takeoff`
     1002          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-land`
@@ -66,6 +67,7 @@ MQTT Payload 类型
     1016          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-push-rtmp-ip-camera`
     1017          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-aircraft-charge`
     1018          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-radio-power`
+    1019          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-coproc-on`
     1196          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-get-camera-param`
     1197          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-set-camera-param`
     1198          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-list-camera-param`
@@ -87,6 +89,7 @@ MQTT Payload 类型
     1301          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-schedule-mission`
     1302          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-schedule-recovery`
     1304          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-schedule-goto-location`
+    1305          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-schedule-upload`
     1496          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-get-mission-file-content`
     1497          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-delete-mission-file`
     1498          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-upload-mission-file`
@@ -273,6 +276,7 @@ MQTT Payload 类型
     plc_power              Bool        否      PLC设备是否打开供电
     radio_power            Bool        否      无线传输设备开关（Codev：图传&GPS；DJI：无效）
     ir_led                 Bool        否      降落灯开关（自动化开/关，无需控制）（Codev：精准降落信标；DJI：夜间灯；）
+    coproc_on              Bool        否      协处理器设备开关机（一般用于DJI飞机：表示 MSDK 硬件设备是否上电）
     aircraft_charging      Bool        否      飞机是否在充电
     aircraft_fit           Bool        否      飞机是否固定住
     door_opening           Bool        否      舱门是否打开中
@@ -366,7 +370,7 @@ MQTT Payload 类型
 
 飞行器断连事件包
 -----------------------
-    *飞行器断联之后会触发一次，记录着飞行器最后一帧数据信息*
+    *飞行器断联之后会触发一次，无需清除，记录着飞行器最后一帧数据信息*
 
 终端发布
 ^^^^^^^^^^^^^^^
@@ -387,6 +391,7 @@ MQTT Payload 类型
     gps_fix_type       String      否       定位精度，"No GPS","No Fix","Fix 2D","Fix 3D"(从这个开始，已经完成定位),"Fix Dgps","Rtk Float","Rtk Fixed"
     aircraft_speed     Double      否       飞机飞行速度
     battery_percent    Double      否       飞机电池电量（0.0～1.0）
+    datetime           String      否       事件发生的日期和时间
     ================= =========  ======== ===============================
 
 例子
@@ -417,6 +422,7 @@ MQTT Payload 类型
             "gps_fix_type": "Fix 3D",
             "aircraft_speed": 0.05999999866,
             "battery_percent": 100,
+            "datetime": "2020-07-20 15:22:00",
             "msg_type": 5
         }
 
@@ -424,7 +430,7 @@ MQTT Payload 类型
 
 设备上线事件
 -----------------------
-    *设备连接上之后自动发送一次*
+    *设备连接上之后自动发送, 5s一次的频率, 需要清除, 如不清除将会一直发送*
 
 终端发布
 ^^^^^^^^^^^^^^^
@@ -432,6 +438,7 @@ MQTT Payload 类型
     参数                类型       缺省      描述
     ================= =========  ======== ===============================
     msg_type           Int         否       :ref:`mqtt-msg-type`
+    datetime           String      否      事件发生的日期和时间
     id                 String      否      唯一序列号
     model              String      否      型号（Codev：A300、ARS300; DJI: AD3、ARS350）
     version            String      否      API 版本号
@@ -443,9 +450,74 @@ MQTT Payload 类型
 
         {
             "msg_type": 6,
+            "datetime": "2020-07-20 15:22:00",
             "id": "0242AC110002",
             "model": "A300",
             "version": "1.0.0-1.1.1-1.2.1"
+        }
+
+服务器清除事件
+^^^^^^^^^^^^^^^
+    ================= =========  ======== ===============================
+    参数                类型       缺省      描述
+    ================= =========  ======== ===============================
+    msg_type           Int         否       :ref:`mqtt-msg-type`
+    ================= =========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 6
+        }
+
+.. _mqtt-upload-finished:
+
+上传任务照片完成事件
+-----------------------
+    *设备完成上传之后自动发送, 15s一次的频率, 需要清除, 如不清除将会在 10 分钟后自动清除*
+
+终端发布
+^^^^^^^^^^^^^^^
+    ===================== =========  ======== ===============================
+    参数                  类型        缺省      描述
+    ===================== =========  ======== ===============================
+    msg_type               Int       否        :ref:`mqtt-msg-type`
+    datetime               String    否        事件发生的日期和时间
+    download_total         Int       否        已下载的总文件数（包含错误的）
+    download_error_count   Int       否        下载文件的错误数
+    upload_total           Int       否        已上传的总文件数（包含错误的）
+    upload_error_count     Int       否        上传文件的错误数   
+    ===================== =========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 7,
+            "datetime": "2020-07-20 15:22:00",
+            "download_total": 20,
+            "download_error_count": 0,
+            "upload_total": 20,
+            "upload_error_count": 0
+        }
+
+服务器清除事件
+^^^^^^^^^^^^^^^
+    ================= =========  ======== ===============================
+    参数                类型       缺省      描述
+    ================= =========  ======== ===============================
+    msg_type           Int         否       :ref:`mqtt-msg-type`
+    ================= =========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 7
         }
 
 .. _mqtt-arm:
@@ -1091,7 +1163,7 @@ MQTT Payload 类型
     参数          类型       描述
     ===========  ======== ===============================
     msg_type      Int       :ref:`mqtt-msg-type`
-    result        Int       :ref:`result-label`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1134,7 +1206,7 @@ MQTT Payload 类型
     参数          类型       描述
     ===========  ======== ===============================
     msg_type      Int       :ref:`mqtt-msg-type`
-    result        Int       :ref:`result-label`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1178,7 +1250,7 @@ MQTT Payload 类型
     参数          类型       描述
     ===========  ======== ===============================
     msg_type      Int       :ref:`mqtt-msg-type`
-    result        Int       :ref:`result-label`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1223,7 +1295,7 @@ MQTT Payload 类型
     参数          类型       描述
     ===========  ======== ===============================
     msg_type      Int       :ref:`mqtt-msg-type`
-    result        Int       :ref:`result-label`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子
@@ -1251,6 +1323,50 @@ MQTT Payload 类型
 
         {
             "msg_type": 1018,
+            "on": true
+        }
+
+.. _mqtt-coproc-on:
+
+协处理器设备开关机
+----------------------------------------------
+    *一般用于DJI飞机：用于开关 MSDK 硬件设备。*
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1019
+        }
+
+服务端发布
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`mqtt-msg-type`
+    on            Bool      false：关，true：开
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1019,
             "on": true
         }
 
@@ -2016,12 +2132,17 @@ MQTT Payload 类型
 
 服务端发布
 ^^^^^^^^^^^^^^^
+    *upload_url, access_key, secret_key, 可不填, 填入正确值之后会触发完成一次任务后自动上传任务照片到指定的 URL, 并且会在执行任务前会格式化相机存储卡, 如果不填, 则不会上传任务文件*
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
     msg_type      Int       :ref:`mqtt-msg-type`
     name          String    需要执行的任务文件名称
+    upload_url    String    上传任务文件到服务器的URL
+    access_key    String    上传任务文件到服务器的AccessKey
+    secret_key    String    上传任务文件到服务器的SecretKey
+    protocol      String    上传任务文件到服务器的协议 BasicHttp、MinIOS3, 可不填, 默认为 MinIOS3
     ===========  ======== ===============================
 
 例子
@@ -2029,8 +2150,11 @@ MQTT Payload 类型
     ::
 
         {
-            "name": "test.mission"
-            "msg_type": 1301
+            "name": "test.mission",
+            "msg_type": 1301,
+            "upload_url": "http://127.0.0.1:9000/bucket",
+            "access_key": "1234567890",
+            "secret_key": "1234567890"
         }
 
 .. _mqtt-schedule-recovery:
@@ -2123,6 +2247,54 @@ MQTT Payload 类型
             "msg_type": 1304
         }
 
+.. _mqtt-schedule-upload:
+
+上传相机中的照片到指定服务器
+----------------------------------------------
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1305
+        }
+
+服务端发布
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`mqtt-msg-type`
+    upload_url    String    上传任务文件到服务器的URL
+    access_key    String    上传任务文件到服务器的AccessKey
+    secret_key    String    上传任务文件到服务器的SecretKey
+    protocol      String    上传任务文件到服务器的协议 BasicHttp、MinIOS3, 可不填, 默认为 MinIOS3
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1305,
+            "upload_url": "http://127.0.0.1:9000/bucket",
+            "access_key": "1234567890",
+            "secret_key": "1234567890",
+        }
+
 .. _mqtt-schedule-rtl-in-idle:
 
 设置飞行器返航自动触发联动任务
@@ -2135,7 +2307,7 @@ MQTT Payload 类型
     参数          类型       描述
     ===========  ======== ===============================
     msg_type      Int       :ref:`mqtt-msg-type`
-    result        Int       :ref:`result-label`
+    result        Int       :ref:`mqtt-result`
     ===========  ======== ===============================
 
 例子

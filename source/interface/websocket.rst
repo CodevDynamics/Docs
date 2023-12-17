@@ -17,6 +17,7 @@ WebSocket 客户端
     4             终端          服务器         否       :ref:`schedule-status-label`
     5             终端          服务器         否       :ref:`disconnected-telemetry-label`
     6             终端          服务器         否       :ref:`airport-online-label`
+    7             终端          服务器         否       :ref:`upload-finished-label`
     1000          服务器         终端          是       :ref:`arm-label`
     1001          服务器         终端          是       :ref:`takeoff-label`
     1002          服务器         终端          是       :ref:`land-label`
@@ -36,6 +37,7 @@ WebSocket 客户端
     1016          服务器         终端          是       :ref:`push-rtmp-ip-camera-label`
     1017          服务器         终端          是       :ref:`aircraft-charge-label`
     1018          服务器         终端          是       :ref:`radio-power-label`
+    1019          服务器         终端          是       :ref:`coproc-on-label`
     1196          服务器         终端          是       :ref:`get-camera-param-label`
     1197          服务器         终端          是       :ref:`set-camera-param-label`
     1198          服务器         终端          是       :ref:`list-camera-param-label`
@@ -56,6 +58,7 @@ WebSocket 客户端
     1301          服务器         终端          是       :ref:`schedule-mission-label`
     1302          服务器         终端          是       :ref:`schedule-recovery-label`
     1304          服务器         终端          是       :ref:`schedule-goto-location-label`
+    1305          服务器         终端          是       :ref:`schedule-upload-label`
     1399          服务器         终端          是       :ref:`schedule-rtl-in-idle-label`
     1496          服务器         终端          是       :ref:`get-mission-file-content-label`
     1497          服务器         终端          是       :ref:`delete-mission-file-label`
@@ -243,6 +246,7 @@ WebSocket 客户端
     plc_power              Bool        否      PLC设备是否打开供电
     radio_power            Bool        否      无线传输设备开关（Codev：图传&GPS；DJI：无效）
     ir_led                 Bool        否      降落灯开关（自动化开/关，无需控制）（Codev：精准降落信标；DJI：夜间灯；）
+    coproc_on              Bool        否      协处理器设备开关机（一般用于DJI飞机：表示 MSDK 硬件设备是否上电）
     aircraft_charging      Bool        否      飞机是否在充电
     aircraft_fit           Bool        否      飞机是否固定住
     aircraft_on            Bool        否      飞机是否开机，仅在 aircraft_fit=true 时有效
@@ -338,7 +342,7 @@ WebSocket 客户端
 
 飞行器断连事件包
 -----------------------
-    *飞行器断联之后会触发一次，记录着飞行器最后一帧数据信息*
+    *飞行器断联之后会触发一次，无需清除，记录着飞行器最后一帧数据信息*
 
 终端发送
 ^^^^^^^^^^^^^^^
@@ -359,6 +363,7 @@ WebSocket 客户端
     gps_fix_type       String      否       定位精度，"No GPS","No Fix","Fix 2D","Fix 3D"(从这个开始，已经完成定位),"Fix Dgps","Rtk Float","Rtk Fixed"
     aircraft_speed     Double      否       飞机飞行速度
     battery_percent    Double      否       飞机电池电量（0.0～1.0）
+    datetime           String      否       事件发生的日期和时间
     ================= =========  ======== ===============================
 
 例子
@@ -389,6 +394,7 @@ WebSocket 客户端
             "gps_fix_type": "Fix 3D",
             "aircraft_speed": 0.05999999866,
             "battery_percent": 100,
+            "datetime": "2020-07-20 15:22:00",
             "msg_type": 5
         }
 
@@ -396,7 +402,7 @@ WebSocket 客户端
 
 设备上线消息
 -----------------------
-    *设备连接上之后自动发送一次*
+    *设备连接上之后自动发送, 5s一次的频率, 需要清除, 如不清除将会一直发送*
 
 终端发送
 ^^^^^^^^^^^^^^^
@@ -404,6 +410,7 @@ WebSocket 客户端
     参数                类型       缺省      描述
     ================= =========  ======== ===============================
     msg_type           Int         否       :ref:`msg-type-label`
+    datetime           String      否      事件发生的日期和时间
     id                 String      否      唯一序列号
     model              String      否      型号（Codev：A300、ARS300; DJI: AD3、ARS350）
     version            String      否      API 版本号
@@ -415,9 +422,74 @@ WebSocket 客户端
 
         {
             "msg_type": 6,
+            "datetime": "2020-07-20 15:22:00",
             "id": "0242AC110002",
             "model": "A300",
             "version": "1.0.0-1.1.1-1.2.1"
+        }
+
+服务器清除事件
+^^^^^^^^^^^^^^^
+    ================= =========  ======== ===============================
+    参数                类型       缺省      描述
+    ================= =========  ======== ===============================
+    msg_type           Int         否       :ref:`msg-type-label`
+    ================= =========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 6
+        }
+
+.. _upload-finished-label:
+
+上传任务照片完成事件
+-----------------------
+    *设备完成上传之后自动发送, 15s一次的频率, 需要清除, 如不清除将会在 10 分钟后自动清除*
+
+终端发送
+^^^^^^^^^^^^^^^
+    ===================== =========  ======== ===============================
+    参数                  类型        缺省      描述
+    ===================== =========  ======== ===============================
+    msg_type               Int       否        :ref:`msg-type-label`
+    datetime               String    否        事件发生的日期和时间
+    download_total         Int       否        已下载的总文件数（包含错误的）
+    download_error_count   Int       否        下载文件的错误数
+    upload_total           Int       否        已上传的总文件数（包含错误的）
+    upload_error_count     Int       否        上传文件的错误数   
+    ===================== =========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 7,
+            "datetime": "2020-07-20 15:22:00",
+            "download_total": 20,
+            "download_error_count": 0,
+            "upload_total": 20,
+            "upload_error_count": 0
+        }
+
+服务器清除事件
+^^^^^^^^^^^^^^^
+    ================= =========  ======== ===============================
+    参数                类型       缺省      描述
+    ================= =========  ======== ===============================
+    msg_type           Int         否       :ref:`msg-type-label`
+    ================= =========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 7
         }
 
 .. _arm-label:
@@ -1226,6 +1298,50 @@ WebSocket 客户端
             "on": true
         }
 
+.. _coproc-on-label:
+
+协处理器设备开关机
+----------------------------------------------
+    *一般用于DJI飞机：用于开关 MSDK 硬件设备。*
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    result        Int       :ref:`result-label`
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1019
+        }
+
+服务端发送
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    on            Bool      false：关，true：开
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1019,
+            "on": true
+        }
+
 .. _get-camera-param-label:
 
 获得相机参数值
@@ -1988,12 +2104,17 @@ WebSocket 客户端
 
 服务端发送
 ^^^^^^^^^^^^^^^
+    *upload_url, access_key, secret_key, 可不填, 填入正确值之后会触发完成一次任务后自动上传任务照片到指定的 URL, 并且会在执行任务前会格式化相机存储卡, 如果不填, 则不会上传任务文件*
 
     ===========  ======== ===============================
     参数          类型       描述
     ===========  ======== ===============================
     msg_type      Int       :ref:`msg-type-label`
     name          String    需要执行的任务文件名称
+    upload_url    String    上传任务文件到服务器的URL
+    access_key    String    上传任务文件到服务器的AccessKey
+    secret_key    String    上传任务文件到服务器的SecretKey
+    protocol      String    上传任务文件到服务器的协议 BasicHttp、MinIOS3, 可不填, 默认为 MinIOS3
     ===========  ======== ===============================
 
 例子
@@ -2003,6 +2124,9 @@ WebSocket 客户端
         {
             "name": "test.mission"
             "msg_type": 1301
+            "upload_url": "http://127.0.0.1:9000/bucket",
+            "access_key": "1234567890",
+            "secret_key": "1234567890"
         }
 
 .. _schedule-recovery-label:
@@ -2093,6 +2217,54 @@ WebSocket 客户端
             "altitude": 50,
             "yaw": 66.8,
             "msg_type": 1304
+        }
+
+.. _schedule-upload-label:
+
+上传相机中的照片到指定服务器
+----------------------------------------------
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    result        Int       :ref:`result-label`
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1305
+        }
+
+服务端发送
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    upload_url    String    上传任务文件到服务器的URL
+    access_key    String    上传任务文件到服务器的AccessKey
+    secret_key    String    上传任务文件到服务器的SecretKey
+    protocol      String    上传任务文件到服务器的协议 BasicHttp、MinIOS3, 可不填, 默认为 MinIOS3
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1305,
+            "upload_url": "http://127.0.0.1:9000/bucket",
+            "access_key": "1234567890",
+            "secret_key": "1234567890",
         }
 
 .. _schedule-rtl-in-idle-label:
