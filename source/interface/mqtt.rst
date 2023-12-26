@@ -184,7 +184,7 @@ MQTT Payload 类型
     aircraft_yaw       Double      否       飞机 Yaw，单位度
     satellite_number   Int         否       GPS 卫星数
     gps_fix_type       String      否       定位精度，"No GPS","No Fix","Fix 2D","Fix 3D"(从这个开始，已经完成定位),"Fix Dgps","Rtk Float","Rtk Fixed"
-    aircraft_speed     Double      否       飞机飞行速度
+    aircraft_speed     Double[]    否       飞机飞行速度，3个浮点型，依次是 X,Y,Z 轴，单位 m/s
     battery_percent    Double      否       飞机电池电量（0.0～1.0）
     camera_model       String      能       相机型号（唯一）
     gimbal_roll        Double      能       云台 Roll，单位度
@@ -219,7 +219,11 @@ MQTT Payload 类型
             "aircraft_yaw": 9.299003601,
             "satellite_number": 10,
             "gps_fix_type": "Fix 3D",
-            "aircraft_speed": 0.05999999866,
+            "aircraft_speed": [
+                0.05,
+                0.02,
+                0.01
+            ],
             "battery_percent": 100,
             "msg_type": 1
         }
@@ -389,7 +393,7 @@ MQTT Payload 类型
     aircraft_yaw       Double      否       飞机 Yaw，单位度
     satellite_number   Int         否       GPS 卫星数
     gps_fix_type       String      否       定位精度，"No GPS","No Fix","Fix 2D","Fix 3D"(从这个开始，已经完成定位),"Fix Dgps","Rtk Float","Rtk Fixed"
-    aircraft_speed     Double      否       飞机飞行速度
+    aircraft_speed     Double[]    否       飞机飞行速度，3个浮点型，依次是 X,Y,Z 轴，单位 m/s
     battery_percent    Double      否       飞机电池电量（0.0～1.0）
     datetime           String      否       事件发生的日期和时间
     ================= =========  ======== ===============================
@@ -420,7 +424,11 @@ MQTT Payload 类型
             "aircraft_yaw": 9.299003601,
             "satellite_number": 10,
             "gps_fix_type": "Fix 3D",
-            "aircraft_speed": 0.05999999866,
+            "aircraft_speed": [
+                0.05,
+                0.02,
+                0.01
+            ],
             "battery_percent": 100,
             "datetime": "2020-07-20 15:22:00",
             "msg_type": 5
