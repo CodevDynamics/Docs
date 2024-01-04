@@ -103,7 +103,8 @@ WebSocket 客户端
     ================= =========  ======== ===============================
     latitude          Double      否       航点纬度
     longitude         Double      否       航点经度
-    altitude          Double      否       航点相对高度（相对 Home 点）
+    altitude_rel      Double      否       航点相对高度（相对 Home 点）
+    altitude_abs      Double      否       航点绝对高度（GPS 高度）
     vehicle_action    Int         能       0: 普通航点，1: 起飞，2: 降落，5: 返航
     speed             Double      能       执行到该航点时，切换飞行器速度
     camera_action     Int         能       0: 无动作，1: 拍照，4: 开始录像，5: 停止录像
@@ -114,6 +115,8 @@ WebSocket 客户端
     camera_zoom       Double      能       相机Zoom倍数值，根据每个相机实际范围决定，如：30倍，值的范围1-30
     loiter_time_s     Double      能       飞机在该点悬停时间，如果该值被设置，`is_fly_through`: 将无效
     ================= =========  ======== ===============================
+
+    **'altitude_rel' 和 'altitude_abs'，必须存在一个，如果同时存在 'altitude_abs' 优先**
 
 .. _param-object-label:
 
@@ -2353,13 +2356,13 @@ WebSocket 客户端
                 {
                     "latitude": 32.111,
                     "longitude": 120.111,
-                    "altitude": 82.6,
+                    "altitude_rel": 82.6,
                     "vehicle_action": 1
                 },
                 {
                     "latitude": 32.111,
                     "longitude": 120.112,
-                    "altitude": 82.6,
+                    "altitude_rel": 82.6,
                     "vehicle_action": 0,
                     "speed": 5.0,
                     "is_fly_through": true
@@ -2367,7 +2370,7 @@ WebSocket 客户端
                 {
                     "latitude": 32.111,
                     "longitude": 120.113,
-                    "altitude": 82.6,
+                    "altitude_rel": 82.6,
                     "camera_action": 0,
                     "gimbal_pitch": 10.0,
                     "gimbal_yaw": 45.0,
@@ -2489,13 +2492,13 @@ WebSocket 客户端
                 {
                     "latitude": 32.111,
                     "longitude": 120.111,
-                    "altitude": 82.6,
+                    "altitude_rel": 82.6,
                     "vehicle_action": 1
                 },
                 {
                     "latitude": 32.111,
                     "longitude": 120.112,
-                    "altitude": 82.6,
+                    "altitude_rel": 82.6,
                     "vehicle_action": 0,
                     "speed": 5.0,
                     "is_fly_through": true
@@ -2503,7 +2506,7 @@ WebSocket 客户端
                 {
                     "latitude": 32.111,
                     "longitude": 120.113,
-                    "altitude": 82.6,
+                    "altitude_rel": 82.6,
                     "camera_action": 0,
                     "gimbal_pitch": 10.0,
                     "gimbal_yaw": 45.0,
