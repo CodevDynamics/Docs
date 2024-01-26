@@ -49,6 +49,7 @@ MQTT Payload 类型
     6             :ref:`事件消息 <msg-topic-list>`    :ref:`mqtt-airport-online`
     7             :ref:`事件消息 <msg-topic-list>`    :ref:`mqtt-upload-finished`
     8             :ref:`事件消息 <msg-topic-list>`    :ref:`mqtt-mission-finished`
+    999           :ref:`事件消息 <msg-topic-list>`    :ref:`mqtt-log-text`
     1000          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-arm`
     1001          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-takeoff`
     1002          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-land`
@@ -69,6 +70,10 @@ MQTT Payload 类型
     1017          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-aircraft-charge`
     1018          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-radio-power`
     1019          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-coproc-on`
+    1192          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-get-aircraft-param`
+    1193          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-set-aircraft-param`
+    1194          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-list-aircraft-param`
+    1195          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-describe-aircraft-param`
     1196          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-get-camera-param`
     1197          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-set-camera-param`
     1198          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-list-camera-param`
@@ -159,7 +164,7 @@ MQTT Payload 类型
     name               String      否       名称
     type               String      否       类型，只有“Int”，“Float”其中之一
     description        String      否       参数描述
-    enumStrings        StringList  能       可选项名称列表
+    enumStrings        StringList  能       可选项名称列表（如果每个字符串中包含'<<',代表可多选,即按位赋值）
     enumValues         DoubleList  能       可选项值列表
     min                Double      能       最小值
     max                Double      能       最大值
@@ -286,7 +291,8 @@ MQTT Payload 类型
     ir_led                 Bool        否      降落灯开关（自动化开/关，无需控制）（Codev：精准降落信标；DJI：夜间灯；）
     coproc_on              Bool        否      协处理器设备开关机（一般用于DJI飞机：表示 MSDK 硬件设备是否上电）
     aircraft_charging      Bool        否      飞机是否在充电
-    aircraft_fit           Bool        否      飞机是否固定住
+    aircraft_fit           Bool        否      飞机是否固定住（DJI飞机：无效，不可用于逻辑判断，恒为 true）
+    aircraft_on            Bool        否      飞机是否开机，仅在 aircraft_fit=true 时有效
     door_opening           Bool        否      舱门是否打开中
     door_closing           Bool        否      舱门是否关闭中
     door_opened            Bool        否      舱门是否打开的
@@ -574,6 +580,36 @@ MQTT Payload 类型
 
         {
             "msg_type": 8
+        }
+
+.. _mqtt-log-text:
+
+机库日志消息事件
+------------------------------------
+    *来自机库的日志消息事件，用于调试分析问题，无需取消*
+
+终端发布
+^^^^^^^^^^^^^^^
+    ===================== =========  ======== ===============================
+    参数                  类型        缺省      描述
+    ===================== =========  ======== ===============================
+    msg_type               Int       否        :ref:`mqtt-msg-type`
+    datetime               String    否        事件发生的日期和时间
+    level                  Int       否        日志级别：0:info, 1:warn, 2:error
+    package                String    否        进程代号
+    message                String    否        日志信息
+    ===================== =========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 8,
+            "datetime": "2020-07-20 15:22:00",
+            "level": 2,
+            "package": "schedule",
+            "message": "'Camera' is disconnected!"
         }
 
 .. _mqtt-arm:
@@ -1426,6 +1462,201 @@ MQTT Payload 类型
             "on": true
         }
 
+.. _mqtt-get-aircraft-param:
+
+获得飞机参数值
+----------------------------------------------
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ===========  ========== ===============================
+    参数          类型       描述
+    ===========  ========== ===============================
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
+    values       DoubleList 对应参数值列表，类型只有整数与浮点数
+    ===========  ========== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1192
+            "values": [1, 2000, 1]
+        }
+
+服务端发布
+^^^^^^^^^^^^^^^
+
+    ===========  ========== ===============================
+    参数          类型       描述
+    ===========  ========== ===============================
+    msg_type      Int       :ref:`mqtt-msg-type`
+    names        StringList 参数名称列表
+    ===========  ========== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1192,
+            "names": ["CAM_MODE","CAM_ISO","CAM_WBMODE"]
+        }
+
+.. _mqtt-set-aircraft-param:
+
+设置飞机参数值
+----------------------------------------------
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ===========  ========== ===============================
+    参数          类型       描述
+    ===========  ========== ===============================
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
+    reason       String     失败原因，成功没有该字段
+    ===========  ========== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1193
+        }
+
+服务端发布
+^^^^^^^^^^^^^^^
+
+    ===========  ========== ===============================
+    参数          类型       描述
+    ===========  ========== ===============================
+    msg_type      Int       :ref:`mqtt-msg-type`
+    names        StringList 参数名称列表
+    values       DoubleList 对应参数值列表，类型只有整数与浮点数
+    ===========  ========== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1193,
+            "names": ["CAM_MODE","CAM_ISO","CAM_WBMODE"],
+            "values": [1, 2000, 1]
+        }
+
+.. _mqtt-list-aircraft-param:
+
+获得飞机参数列表
+----------------------------------------------
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ===========  ========== ===============================
+    参数          类型       描述
+    ===========  ========== ===============================
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
+    names        StringList 参数名称列表
+    ===========  ========== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1194
+            "names": ["CAM_MODE","CAM_ISO","CAM_WBMODE"]
+        }
+
+服务端发布
+^^^^^^^^^^^^^^^
+
+    ===========  ========== ===============================
+    参数          类型       描述
+    ===========  ========== ===============================
+    msg_type      Int       :ref:`mqtt-msg-type`
+    ===========  ========== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1194
+        }
+
+.. _mqtt-describe-aircraft-param:
+
+获得飞机参数类型与范围信息
+----------------------------------------------
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ============ ========== ===============================
+    参数          类型       描述
+    ============ ========== ===============================
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
+    descriptors  ObjectList :ref:`mqtt-param-object`
+    ============ ========== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1195
+            "descriptors": [
+                {
+                    "name": "CAM_WBMODE",
+                    "type": "Int",
+                    "description": "Camera white balance mode",
+                    "enumStrings": ["Auto", "Manual"],
+                    "enumValues": [0, 1]
+                },
+                {
+                    "name": "CAM_ZOOM_SPEED",
+                    "type": "Int",
+                    "description": "Camera zoom speed",
+                    "min": 1,
+                    "max": 10,
+                    "step": 1
+                }
+            ]
+        }
+
+服务端发布
+^^^^^^^^^^^^^^^
+
+    ===========  ========== ===============================
+    参数          类型       描述
+    ===========  ========== ===============================
+    msg_type      Int       :ref:`mqtt-msg-type`
+    names        StringList 参数名称列表
+    ===========  ========== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1195,
+            "names": ["CAM_WBMODE","CAM_ZOOM_SPEED"]
+        }
+
 .. _mqtt-get-camera-param:
 
 获得相机参数值
@@ -1987,7 +2218,7 @@ MQTT Payload 类型
     ============= ======== ===============================
     参数          类型       描述
     ============= ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     has_aircraft  Bool      是否控制开/关机，可不填，默认为True
     ============= ======== ===============================
 
@@ -2071,7 +2302,7 @@ MQTT Payload 类型
     ============= ======== ===============================
     参数          类型       描述
     ============= ======== ===============================
-    msg_type      Int       :ref:`msg-type-label`
+    msg_type      Int       :ref:`mqtt-msg-type`
     has_aircraft  Bool      是否控制开/关机，可不填，默认为True
     ============= ======== ===============================
 

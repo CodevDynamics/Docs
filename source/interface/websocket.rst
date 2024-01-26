@@ -19,6 +19,7 @@ WebSocket 客户端
     6             终端          服务器         否       :ref:`airport-online-label`
     7             终端          服务器         否       :ref:`upload-finished-label`
     8             终端          服务器         否       :ref:`mission-finished-label`
+    999           终端          服务器         否       :ref:`log-text-label`
     1000          服务器         终端          是       :ref:`arm-label`
     1001          服务器         终端          是       :ref:`takeoff-label`
     1002          服务器         终端          是       :ref:`land-label`
@@ -39,6 +40,10 @@ WebSocket 客户端
     1017          服务器         终端          是       :ref:`aircraft-charge-label`
     1018          服务器         终端          是       :ref:`radio-power-label`
     1019          服务器         终端          是       :ref:`coproc-on-label`
+    1192          服务器         终端          是       :ref:`get-aircraft-param-label`
+    1193          服务器         终端          是       :ref:`set-aircraft-param-label`
+    1194          服务器         终端          是       :ref:`list-aircraft-param-label`
+    1195          服务器         终端          是       :ref:`describe-aircraft-param-label`
     1196          服务器         终端          是       :ref:`get-camera-param-label`
     1197          服务器         终端          是       :ref:`set-camera-param-label`
     1198          服务器         终端          是       :ref:`list-camera-param-label`
@@ -256,7 +261,7 @@ WebSocket 客户端
     ir_led                 Bool        否      降落灯开关（自动化开/关，无需控制）（Codev：精准降落信标；DJI：夜间灯；）
     coproc_on              Bool        否      协处理器设备开关机（一般用于DJI飞机：表示 MSDK 硬件设备是否上电）
     aircraft_charging      Bool        否      飞机是否在充电
-    aircraft_fit           Bool        否      飞机是否固定住
+    aircraft_fit           Bool        否      飞机是否固定住（DJI飞机：无效，不可用于逻辑判断，恒为 true）
     aircraft_on            Bool        否      飞机是否开机，仅在 aircraft_fit=true 时有效
     door_opening           Bool        否      舱门是否打开中
     door_closing           Bool        否      舱门是否关闭中
@@ -515,7 +520,7 @@ WebSocket 客户端
     ===================== =========  ======== ===============================
     参数                  类型        缺省      描述
     ===================== =========  ======== ===============================
-    msg_type               Int       否        :ref:`mqtt-msg-type`
+    msg_type               Int       否        :ref:`msg-type-label`
     datetime               String    否        事件发生的日期和时间
     success                Bool      否        任务流程是否正确完成
     error_message          String    是        当 success 为 false 时，会返回错误信息
@@ -537,7 +542,7 @@ WebSocket 客户端
     ================= =========  ======== ===============================
     参数                类型       缺省      描述
     ================= =========  ======== ===============================
-    msg_type           Int         否       :ref:`mqtt-msg-type`
+    msg_type           Int         否       :ref:`msg-type-label`
     ================= =========  ======== ===============================
 
 例子
@@ -546,6 +551,36 @@ WebSocket 客户端
 
         {
             "msg_type": 8
+        }
+
+.. _log-text-label:
+
+机库日志消息事件
+------------------------------------
+    *来自机库的日志消息事件，用于调试分析问题，无需取消*
+
+终端发送
+^^^^^^^^^^^^^^^
+    ===================== =========  ======== ===============================
+    参数                  类型        缺省      描述
+    ===================== =========  ======== ===============================
+    msg_type               Int       否        :ref:`mqtt-msg-type`
+    datetime               String    否        事件发生的日期和时间
+    level                  Int       否        日志级别：0:info, 1:warn, 2:error
+    package                String    否        进程代号
+    message                String    否        日志信息
+    ===================== =========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 8,
+            "datetime": "2020-07-20 15:22:00",
+            "level": 2,
+            "package": "schedule",
+            "message": "'Camera' is disconnected!"
         }
 
 .. _arm-label:
@@ -1396,6 +1431,201 @@ WebSocket 客户端
         {
             "msg_type": 1019,
             "on": true
+        }
+
+.. _get-aircraft-param-label:
+
+获得飞机参数值
+----------------------------------------------
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ===========  ========== ===============================
+    参数          类型       描述
+    ===========  ========== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    result        Int       :ref:`result-label`
+    values       DoubleList 对应参数值列表，类型只有整数与浮点数
+    ===========  ========== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1192
+            "values": [1, 2000, 1]
+        }
+
+服务端发送
+^^^^^^^^^^^^^^^
+
+    ===========  ========== ===============================
+    参数          类型       描述
+    ===========  ========== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    names        StringList 参数名称列表
+    ===========  ========== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1192,
+            "names": ["CAM_MODE","CAM_ISO","CAM_WBMODE"]
+        }
+
+.. _set-aircraft-param-label:
+
+设置飞机参数值
+----------------------------------------------
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ===========  ========== ===============================
+    参数          类型       描述
+    ===========  ========== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    result        Int       :ref:`result-label`
+    reason       String     失败原因，成功没有该字段
+    ===========  ========== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1193
+        }
+
+服务端发送
+^^^^^^^^^^^^^^^
+
+    ===========  ========== ===============================
+    参数          类型       描述
+    ===========  ========== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    names        StringList 参数名称列表
+    values       DoubleList 对应参数值列表，类型只有整数与浮点数
+    ===========  ========== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1193,
+            "names": ["CAM_MODE","CAM_ISO","CAM_WBMODE"],
+            "values": [1, 2000, 1]
+        }
+
+.. _list-aircraft-param-label:
+
+获得飞机参数列表
+----------------------------------------------
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ===========  ========== ===============================
+    参数          类型       描述
+    ===========  ========== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    result        Int       :ref:`result-label`
+    names        StringList 参数名称列表
+    ===========  ========== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1194
+            "names": ["CAM_MODE","CAM_ISO","CAM_WBMODE"]
+        }
+
+服务端发送
+^^^^^^^^^^^^^^^
+
+    ===========  ========== ===============================
+    参数          类型       描述
+    ===========  ========== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    ===========  ========== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1194
+        }
+
+.. _describe-aircraft-param-label:
+
+获得飞机参数类型与范围信息
+----------------------------------------------
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ============ ========== ===============================
+    参数          类型       描述
+    ============ ========== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    result        Int       :ref:`result-label`
+    descriptors  ObjectList :ref:`param-object-label`
+    ============ ========== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1195
+            "descriptors": [
+                {
+                    "name": "CAM_WBMODE",
+                    "type": "Int",
+                    "description": "Camera white balance mode",
+                    "enumStrings": ["Auto", "Manual"],
+                    "enumValues": [0, 1]
+                },
+                {
+                    "name": "CAM_ZOOM_SPEED",
+                    "type": "Int",
+                    "description": "Camera zoom speed",
+                    "min": 1,
+                    "max": 10,
+                    "step": 1
+                }
+            ]
+        }
+
+服务端发送
+^^^^^^^^^^^^^^^
+
+    ===========  ========== ===============================
+    参数          类型       描述
+    ===========  ========== ===============================
+    msg_type      Int       :ref:`msg-type-label`
+    names        StringList 参数名称列表
+    ===========  ========== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1195,
+            "names": ["CAM_WBMODE","CAM_ZOOM_SPEED"]
         }
 
 .. _get-camera-param-label:

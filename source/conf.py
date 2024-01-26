@@ -17,8 +17,7 @@ release = '1.0.1'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    'sphinxcontrib.plantuml',
-    'sphinxcontrib.ros'
+    'sphinxcontrib.plantuml'
 ]
 
 templates_path = ['_templates']
