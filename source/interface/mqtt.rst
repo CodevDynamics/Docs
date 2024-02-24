@@ -70,6 +70,7 @@ MQTT Payload 类型
     1017          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-aircraft-charge`
     1018          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-radio-power`
     1019          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-coproc-on`
+    1020          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-action-lock`
     1192          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-get-aircraft-param`
     1193          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-set-aircraft-param`
     1194          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-list-aircraft-param`
@@ -1459,6 +1460,50 @@ MQTT Payload 类型
 
         {
             "msg_type": 1019,
+            "on": true
+        }
+
+.. _mqtt-action-lock:
+
+锁定/解锁机库
+----------------------------------------------
+    *锁定机库后，机库可动机械将被锁定，不可动。*
+
+终端应答
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`mqtt-msg-type`
+    result        Int       :ref:`mqtt-result`
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "result": 1,
+            "msg_type": 1020
+        }
+
+服务端发布
+^^^^^^^^^^^^^^^
+
+    ===========  ======== ===============================
+    参数          类型       描述
+    ===========  ======== ===============================
+    msg_type      Int       :ref:`mqtt-msg-type`
+    on            Bool      false：解锁，true：锁定
+    ===========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 1020,
             "on": true
         }
 
