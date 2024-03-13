@@ -286,6 +286,7 @@ MQTT Payload 类型
     charge_voltage         Float       否      充电电压
     charge_current         Float       否      充电电流（Codev 无）
     charge_percent         Float       否      充电百分比（DJI 无）
+    action_locked          Bool        否      机库是否锁定
     aircondition_running   Bool        否      空调是否运行
     plc_power              Bool        否      PLC设备是否打开供电
     radio_power            Bool        否      无线传输设备开关（Codev：图传&GPS；DJI：无效）
