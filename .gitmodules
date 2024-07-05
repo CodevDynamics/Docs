@@ -1,6 +1,0 @@
-[submodule "source/aquila_i/code"]
-	path = source/aquila_i/code
-	url = https://github.com/CodevDynamics/ROSDemo.git
-[submodule "source/interface/CodevRos"]
-	path = source/interface/CodevRos
-	url = https://github.com/CodevDynamics/CodevRos.git

@@ -22,7 +22,6 @@ extensions = [
 
 templates_path = ['_templates']
 exclude_patterns = []
-ros_base_path = [ './interface/CodevRos']
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
