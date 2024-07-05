@@ -22,7 +22,7 @@ jobs:
         with:
           fetch-depth: '0'
           submodules: 'true'
-          token: ${{ secrets.CODEVCI }}
+          # token: ${{ secrets.CODEVCI }}
 
       - name: Build HTML
         run: |
