@@ -185,7 +185,7 @@ MQTT Payload 类型
     msg_type           Int         否       :ref:`mqtt-msg-type`
     aircraft_id        String      否       飞行器 UUID
     timestamp          Long        否       UTC 时间
-    landed_state       String      否       "On Gound","In Air","Taking Off","Landing"
+    landed_state       String      否       "On Ground","In Air","Taking Off","Landing"
     flight_mode        String      否       "Ready"(可以起飞),"Takeoff","Hold","Mission","Return To Launch","Land","Posctl"
     home               Double[]    否       Home 点，4个浮点型，依次是纬度、经度、海拔高度、相对高度
     position           Double[]    否       飞行器当前位置，4个浮点型，依次是纬度、经度、海拔高度、相对高度
@@ -396,7 +396,7 @@ MQTT Payload 类型
     msg_type           Int         否       :ref:`mqtt-msg-type`
     aircraft_id        String      否       飞行器 UUID
     timestamp          Long        否       UTC 时间
-    landed_state       String      否       "On Gound","In Air","Taking Off","Landing"
+    landed_state       String      否       "On Ground","In Air","Taking Off","Landing"
     flight_mode        String      否       "Ready"(可以起飞),"Takeoff","Hold","Mission","Return To Launch","Land","Posctl"
     home               Double[]    否       Home 点，4个浮点型，依次是纬度、经度、海拔高度、相对高度
     position           Double[]    否       飞行器当前位置，4个浮点型，依次是纬度、经度、海拔高度、相对高度
