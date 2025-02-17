@@ -15,7 +15,7 @@ MQTT Topic 格式列表
     事件消息       nest/{Model}/{ClientID}/events           设备事件上报，当设备处于某些状态是上报（设备发布给服务器）
     机库服务       nest/{Model}/{ClientID}/services         用于机库与飞机控制（服务器发布给设备）
     服务应答       nest/{Model}/{ClientID}/services_reply   机库与飞机应答控制（设备发布给服务器）
-    监听控制       nest/{Model}/{ClientID}/listener         手动控制飞行器的遥感包（服务器发布给设备）
+    监听控制       nest/{Model}/{ClientID}/listeners        手动控制飞行器的遥感包（服务器发布给设备）
     ===========  ======================================== =========================================================
 
     *Model种类包含Codev：A300、ARS300、ARS200；DJI：AD3、ARS350、AD2*
@@ -200,6 +200,7 @@ MQTT Payload 类型
     gimbal_roll        Double      能       云台 Roll，单位度
     gimbal_pitch       Double      能       云台 Pitch，单位度
     gimbal_yaw         Double      能       云台 Yaw，单位度
+    gimbal_yaw_abs     Double      能       云台 Yaw 绝对角度，单位度
     has_stream         Bool        能       是否有视频流
     ================= =========  ======== ===============================
 
@@ -2953,8 +2954,10 @@ MQTT Payload 类型
     参数          类型       描述
     ===========  ======== ===============================
     msg_type      Int       :ref:`mqtt-msg-type`
-    pitch         Double    云台 Pitch，单位度
-    yaw           Double    云台 Yaw，单位度
+    pitch         Double    云台 Pitch，单位度(可不填)
+    yaw           Double    云台 Yaw，单位度(可不填)
+    pitch_rate    Double    云台 Pitch 速率，单位度/秒(可不填)
+    yaw_rate      Double    云台 Yaw 速率，单位度/秒(可不填)
     ===========  ======== ===============================
 
 例子
@@ -2962,7 +2965,6 @@ MQTT Payload 类型
     ::
 
         {
-            "pitch": 0.0,
             "yaw": 45.0,
             "msg_type": 1501
         }

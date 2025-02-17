@@ -170,6 +170,7 @@ WebSocket 客户端
     gimbal_roll        Double      能       云台 Roll，单位度
     gimbal_pitch       Double      能       云台 Pitch，单位度
     gimbal_yaw         Double      能       云台 Yaw，单位度
+    gimbal_yaw_abs     Double      能       云台 Yaw 绝对角度，单位度
     has_stream         Bool        能       是否有视频流
     ================= =========  ======== ===============================
 
@@ -2924,8 +2925,10 @@ WebSocket 客户端
     参数          类型       描述
     ===========  ======== ===============================
     msg_type      Int       :ref:`msg-type-label`
-    pitch         Double    云台 Pitch，单位度
-    yaw           Double    云台 Yaw，单位度
+    pitch         Double    云台 Pitch，单位度(可不填)
+    yaw           Double    云台 Yaw，单位度(可不填)
+    pitch_rate    Double    云台 Pitch 速率，单位度/秒(可不填)
+    yaw_rate      Double    云台 Yaw 速率，单位度/秒(可不填)
     ===========  ======== ===============================
 
 例子
@@ -2933,7 +2936,6 @@ WebSocket 客户端
     ::
 
         {
-            "pitch": 0.0,
             "yaw": 45.0,
             "msg_type": 1501
         }
