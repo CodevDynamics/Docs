@@ -196,6 +196,7 @@ MQTT Payload 类型
     gps_fix_type       String      否       定位精度，"No GPS","No Fix","Fix 2D","Fix 3D"(从这个开始，已经完成定位),"Fix Dgps","Rtk Float","Rtk Fixed"
     aircraft_speed     Double[]    否       飞机飞行速度，3个浮点型，依次是 X,Y,Z 轴，单位 m/s
     battery_percent    Double      否       飞机电池电量（0.0～1.0）
+    current_plan       String      能       当前执行的航线名称(Mission飞行模式下)
     camera_model       String      能       相机型号（唯一）
     gimbal_roll        Double      能       云台 Roll，单位度
     gimbal_pitch       Double      能       云台 Pitch，单位度
@@ -368,6 +369,7 @@ MQTT Payload 类型
     running            Bool        否      是否在执行联动任务
     total_executed     Int         否      已经执行的联动任务次数
     current_job        String      否      当前联动类型（唯一）,"Mission", "GotoLocation", "Recovery", "AccurateLand"其中之一
+    json_params        String      否      联动任务的参数，json 格式
     rtl_in_idle        String      否      飞行器返航将会自动触发的联动任务, "Recovery", "AccurateLand"其中之一, 空为无触发联动任务
     ================= =========  ======== ===============================
 
@@ -379,7 +381,8 @@ MQTT Payload 类型
             "msg_type": 4,
             "running": true,
             "total_executed": 20,
-            "current_job": "Recovery",
+            "current_job": "Mission",
+            "json_params": "{\"name\": \"test.plan\"}",
             "rtl_in_idle": ""
         }
 
@@ -506,6 +509,7 @@ MQTT Payload 类型
     ===================== =========  ======== ===============================
     msg_type               Int       否        :ref:`mqtt-msg-type`
     datetime               String    否        事件发生的日期和时间
+    destination            String    否        上传的目的 URL(目录或文件)
     download_total         Int       否        已下载的总文件数（包含错误的）
     download_error_count   Int       否        下载文件的错误数
     upload_total           Int       否        已上传的总文件数（包含错误的）
@@ -519,6 +523,7 @@ MQTT Payload 类型
         {
             "msg_type": 7,
             "datetime": "2020-07-20 15:22:00",
+            "destination": "http://192.168.1.98/upload",
             "download_total": 20,
             "download_error_count": 0,
             "upload_total": 20,
