@@ -202,6 +202,7 @@ MQTT Payload 类型
     gimbal_pitch       Double      能       云台 Pitch，单位度
     gimbal_yaw         Double      能       云台 Yaw，单位度
     gimbal_yaw_abs     Double      能       云台 Yaw 绝对角度，单位度
+    zoom_level         Double      能       相机变焦倍数
     has_stream         Bool        能       是否有视频流
     ================= =========  ======== ===============================
 
@@ -1240,7 +1241,8 @@ MQTT Payload 类型
     参数          类型       描述
     ===========  ======== ===============================
     msg_type      Int       :ref:`mqtt-msg-type`
-    level         Int       变焦等级
+    type          Int       变焦类型(1: 连续变焦, 2: 定倍变焦)
+    value         Float     变焦值(连续变焦时为方向-1/0/1, 定倍变焦时为定倍值)
     ===========  ======== ===============================
 
 例子
@@ -1249,7 +1251,8 @@ MQTT Payload 类型
 
         {
             "msg_type": 1014,
-            "level": 10
+            "type": 1,
+            "value": 8.5
         }
 
 .. _mqtt-aircraft-on:
