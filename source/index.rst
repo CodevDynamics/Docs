@@ -16,12 +16,4 @@ AQUILA I
 .. toctree::
    :maxdepth: 2
 
-   interface/websocket.rst
    interface/mqtt.rst
-
-其他
------------------------
-.. toctree::
-   :maxdepth: 1
-
-   apt/apt_service.rst

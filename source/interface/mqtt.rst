@@ -49,6 +49,9 @@ MQTT Payload 类型
     6             :ref:`事件消息 <msg-topic-list>`    :ref:`mqtt-airport-online`
     7             :ref:`事件消息 <msg-topic-list>`    :ref:`mqtt-upload-finished`
     8             :ref:`事件消息 <msg-topic-list>`    :ref:`mqtt-mission-finished`
+    9             :ref:`事件消息 <msg-topic-list>`    :ref:`mqtt-gotoloaction-finished`
+    10            :ref:`事件消息 <msg-topic-list>`    :ref:`mqtt-recovery-finished`
+    11            :ref:`定频消息 <msg-topic-list>`    :ref:`mqtt-ai-detect-stats`
     999           :ref:`事件消息 <msg-topic-list>`    :ref:`mqtt-log-text`
     1000          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-arm`
     1001          :ref:`机库服务 <msg-topic-list>`    :ref:`mqtt-takeoff`
@@ -286,15 +289,15 @@ MQTT Payload 类型
     humidity               Float       否      当前机库内湿度，单位 %
     setting_temp           Float       否      当前机库空调设定温度
     pressure               Float       否      当前机库所在位置气压
-    charge_voltage         Float       否      充电电压
-    charge_current         Float       否      充电电流（Codev 无）
-    charge_percent         Float       否      充电百分比（DJI 无）
+    battery_voltage        Float       否      充电电压
+    battery_current        Float       否      充电电流（Codev 无）
+    battery_percent        Float       否      充电百分比（DJI 无）
+    battery_temperature    Float       否      电池温度，单位摄氏度
+    battery_cycletimes     Int         否      电池循环次数
     action_locked          Bool        否      机库是否锁定
-    aircondition_running   Bool        否      空调是否运行
-    plc_power              Bool        否      PLC设备是否打开供电
-    radio_power            Bool        否      无线传输设备开关（Codev：图传&GPS；DJI：无效）
-    ir_led                 Bool        否      降落灯开关（自动化开/关，无需控制）（Codev：精准降落信标；DJI：夜间灯；）
-    coproc_on              Bool        否      协处理器设备开关机（一般用于DJI飞机：表示 MSDK 硬件设备是否上电）
+    aircondition_mode      Int         否      空调模式(0: 关闭, 1: 制冷, 2: 制热)
+    radio_power            Bool        否      无线传输设备开关
+    led_on                 Bool        否      照明灯状态(开/关)
     aircraft_charging      Bool        否      飞机是否在充电
     aircraft_fit           Bool        否      飞机是否固定住（DJI飞机：无效，不可用于逻辑判断，恒为 true）
     aircraft_on            Bool        否      飞机是否开机，仅在 aircraft_fit=true 时有效
@@ -306,14 +309,10 @@ MQTT Payload 类型
     lift_downing           Bool        否      推举是否下降中
     lift_up                Bool        否      推举是否在高位
     lift_down              Bool        否      推举是否在低位
-    vertical_fixing        Bool        否      前后限位是否归中中
-    vertical_releasing     Bool        否      前后限位是否打开中
-    vertical_fixed         Bool        否      前后限位是否归中
-    vertical_released      Bool        否      前后限位是否打开
-    horizontal_fixing      Bool        否      左右限位是否归中中
-    horizontal_releasing   Bool        否      左右限位是否打开中
-    horizontal_fixed       Bool        否      左右限位是否归中
-    horizontal_released    Bool        否      左右限位是否打开
+    center_fixing          Bool        否      限位是否归中中
+    center_releasing       Bool        否      限位是否打开中
+    center_fixed           Bool        否      限位是否归中
+    center_released        Bool        否      限位是否打开
     combinations_running   Bool        否      出库/入库组合动作是否正在运行
     fix_type               Int         是      定位精度，大于3完成基本定位，越大精度越高
     latitude               Float       是      机库 GPS 纬度
@@ -345,14 +344,10 @@ MQTT Payload 类型
             "lift_downing": false,
             "lift_up": true,
             "lift_down": false,
-            "vertical_fixing": false,
-            "vertical_releasing": false,
-            "vertical_fixed": false,
-            "vertical_released": true,
-            "horizontal_fixing": false,
-            "horizontal_releasing": false,
-            "horizontal_fixed": false,
-            "horizontal_released": true,
+            "center_fixing": false,
+            "center_releasing": false,
+            "center_fixed": false,
+            "center_released": true,
             "combinations_running": false
         }
 
@@ -573,6 +568,87 @@ MQTT Payload 类型
             "datetime": "2020-07-20 15:22:00",
             "success": false,
             "error_message": "'Camera' is disconnected!"
+        }
+
+.. _mqtt-gotoloaction-finished:
+
+飞行器到达指定点悬停完成事件
+----------------------------------------------
+
+终端发布
+^^^^^^^^^^^^^^^
+    ===================== =========  ======== ===============================
+    参数                  类型        缺省      描述
+    ===================== =========  ======== ===============================
+    msg_type               Int       否        :ref:`mqtt-msg-type`
+    datetime               String    否        事件发生的日期和时间
+    success                Bool      是        任务流程是否正确完成
+    error_message          String    是        当 success 为 false 时，会返回错误信息
+    ===================== =========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 9,
+            "datetime": "2020-07-20 15:22:00",
+            "success": true,
+            "error_message": ""
+        }
+
+.. _mqtt-recovery-finished:
+
+飞行器完成回收完成事件
+----------------------------------------------
+
+终端发布
+^^^^^^^^^^^^^^^
+    ===================== =========  ======== ===============================
+    参数                  类型        缺省      描述
+    ===================== =========  ======== ===============================
+    msg_type               Int       否        :ref:`mqtt-msg-type`
+    datetime               String    否        事件发生的日期和时间
+    success                Bool      是        任务流程是否正确完成
+    error_message          String    是        当 success 为 false 时，会返回错误信息
+    ===================== =========  ======== ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 10,
+            "datetime": "2020-07-20 15:22:00",
+            "success": true,
+            "error_message": ""
+        }
+
+.. _mqtt-ai-detect-stats:
+
+AI 检测统计消息
+----------------------------------------------
+
+终端发布
+^^^^^^^^^^^^^^^
+    ===================== ============ ========= ===============================
+    参数                   类型          缺省      描述
+    ===================== ============ ========= ===============================
+    msg_type               Int          否        :ref:`mqtt-msg-type`
+    names                  StringList   否        检测对象名称列表
+    colors                 StringList   否        检测对象颜色列表
+    counts                 StringList   否        检测对象数量列表
+    ===================== ============ ========= ===============================
+
+例子
+""""""""""""
+    ::
+
+        {
+            "msg_type": 11,
+            "names": ["person", "car", "bike"],
+            "colors": ["red", "blue", "green"],
+            "counts": [10, 20, 30]
         }
 
 服务器清除事件
